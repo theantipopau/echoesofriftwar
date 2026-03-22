@@ -1,4 +1,5 @@
 import type { InventoryViewState } from '../uiTypes'
+import { assetPath } from '../../../utils/assetPaths'
 
 export interface InventoryPanelHandlers {
   onEquip: (itemId: string) => void
@@ -30,7 +31,7 @@ export function renderInventoryPanel(container: HTMLElement, state: InventoryVie
   const left = document.createElement('div')
   left.className = 'inventory-column'
   left.innerHTML = `
-    <div class="panel-title"><img src="/icons/bag.svg" alt="Inventory" /> Inventory</div>
+    <div class="panel-title"><img src="${assetPath('squarelogo.PNG')}" alt="Inventory" /> Inventory</div>
     <div class="inventory-grid"></div>
   `
 
@@ -65,7 +66,7 @@ export function renderInventoryPanel(container: HTMLElement, state: InventoryVie
   const right = document.createElement('div')
   right.className = 'inventory-column inventory-column--narrow'
   right.innerHTML = `
-    <div class="panel-title"><img src="/icons/quest.svg" alt="Loadout" /> Loadout</div>
+    <div class="panel-title"><img src="${assetPath('logo.PNG')}" alt="Loadout" /> Loadout</div>
     <div class="equipment-list"></div>
     <div class="panel-title panel-title--spaced">Stats</div>
     <div class="stats-card">

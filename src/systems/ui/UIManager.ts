@@ -1,9 +1,11 @@
 import type { DialogueViewState, InventoryViewState, QuestViewState, RegionProgressViewState } from './uiTypes'
 import type { InventoryPanelHandlers } from './panels/renderInventoryPanel'
+import { assetPath } from '../../utils/assetPaths'
 
 type NotificationType = 'info' | 'warning' | 'error' | 'success'
 
 export class UIManager {
+  private readonly baseAssetPath = assetPath('')
   private container: HTMLDivElement
   private hud: HTMLDivElement
   private questTracker: HTMLDivElement
@@ -73,7 +75,7 @@ export class UIManager {
 
   private renderQuestShell(): void {
     this.questTracker.innerHTML = `
-      <div class="panel-title"><img src="/icons/quest.svg" alt="Quests" /> Frontier Journal</div>
+      <div class="panel-title"><img src="${assetPath('icons/quest.svg')}" alt="Quests" /> Frontier Journal</div>
     `
 
     if (this.regionState?.currentRegion) {
@@ -208,7 +210,7 @@ export class UIManager {
 
   private createHUD(): void {
     this.hud.innerHTML = `
-      <div class="panel-title"><img class="panel-title__logo" src="/squarelogo.PNG" alt="Echoes crest" /> Echoes of the Riftwar</div>
+      <div class="panel-title"><img class="panel-title__logo" src="${assetPath('squarelogo.PNG')}" alt="Echoes crest" /> Echoes of the Riftwar</div>
       <div class="hud-block">
         <div class="bar-label"><span>Health</span><span id="health-text">100/100</span></div>
         <div class="bar-track"><div id="health-fill" class="bar-fill bar-fill--health"></div></div>
@@ -272,7 +274,7 @@ export class UIManager {
         --ui-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
       }
       .ui-root { position: absolute; inset: 0; pointer-events: none; font-family: Georgia, 'Segoe UI', serif; color: var(--ui-text); }
-      .hud-shell, .quest-shell { position: absolute; backdrop-filter: blur(10px); background-image: linear-gradient(180deg, rgba(20,34,56,0.9), rgba(9,14,24,0.9)), url('/art/rift-noise.svg'); background-size: cover, 220px 220px; background-repeat: no-repeat, repeat; border: 1px solid var(--ui-border); border-radius: 18px; box-shadow: var(--ui-shadow); pointer-events: auto; }
+      .hud-shell, .quest-shell { position: absolute; backdrop-filter: blur(10px); background-image: linear-gradient(180deg, rgba(20,34,56,0.9), rgba(9,14,24,0.9)), url('${this.baseAssetPath}art/rift-noise.svg'); background-size: cover, 220px 220px; background-repeat: no-repeat, repeat; border: 1px solid var(--ui-border); border-radius: 18px; box-shadow: var(--ui-shadow); pointer-events: auto; }
       .hud-shell { top: 18px; left: 18px; width: 300px; padding: 18px; }
       .quest-shell { top: 18px; right: 18px; width: 320px; padding: 18px; }
       .panel-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; letter-spacing: 0.03em; margin-bottom: 14px; }
@@ -317,7 +319,7 @@ export class UIManager {
       .world-popup--info { color: #d7e6ff; }
       .modal-mount { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 32px; pointer-events: auto; background: rgba(5, 8, 15, 0.52); }
       .modal-mount.hidden { display: none; }
-      .inventory-shell, .dialogue-shell { width: min(1080px, calc(100vw - 80px)); border-radius: 24px; background-image: linear-gradient(180deg, rgba(22,34,56,0.98), rgba(10,16,28,0.98)), url('/art/rift-lines.svg'); background-size: cover, 300px 300px; border: 1px solid var(--ui-border); box-shadow: var(--ui-shadow); }
+      .inventory-shell, .dialogue-shell { width: min(1080px, calc(100vw - 80px)); border-radius: 24px; background-image: linear-gradient(180deg, rgba(22,34,56,0.98), rgba(10,16,28,0.98)), url('${this.baseAssetPath}art/rift-lines.svg'); background-size: cover, 300px 300px; border: 1px solid var(--ui-border); box-shadow: var(--ui-shadow); }
       .inventory-shell { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.9fr); gap: 20px; padding: 24px; }
       .inventory-column { min-width: 0; }
       .inventory-column--narrow { border-left: 1px solid rgba(255,255,255,0.08); padding-left: 20px; }
@@ -335,7 +337,7 @@ export class UIManager {
       .stats-card { padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
       .dialogue-shell { max-width: 760px; padding: 22px; }
       .dialogue-header { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; }
-      .dialogue-header img { width: 18px; height: 18px; }
+      .dialogue-header img { width: 20px; height: 20px; border-radius: 5px; }
       .dialogue-close { margin-left: auto; }
       .dialogue-body { margin: 16px 0; font-size: 15px; line-height: 1.7; color: #dfe7f2; }
       .dialogue-options { display: grid; gap: 10px; }

@@ -34,6 +34,7 @@ import { QuestEventResult, QuestJournal } from '../game/QuestJournal'
 import { RegionProgression } from '../game/RegionProgression'
 import DungeonManager from './DungeonManager'
 import type { DungeonData, DungeonInteractableData } from '../../data/types'
+import { assetPath } from '../../utils/assetPaths'
 
 interface WorldDependencies {
   enemyManager: EnemyManager
@@ -161,7 +162,7 @@ export default class WorldManager {
 
     const groundMaterial = new StandardMaterial('groundMaterial', this.scene)
     groundMaterial.emissiveColor = this.getBiomeColor(region.biome)
-    const terrainTexture = new Texture('/art/rift-noise.svg', this.scene)
+    const terrainTexture = new Texture(assetPath('art/rift-noise.svg'), this.scene)
     terrainTexture.uScale = 45
     terrainTexture.vScale = 45
     groundMaterial.diffuseTexture = terrainTexture

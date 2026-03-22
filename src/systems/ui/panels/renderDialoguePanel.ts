@@ -1,4 +1,5 @@
 import type { DialogueViewState } from '../uiTypes'
+import { assetPath } from '../../../utils/assetPaths'
 
 export function renderDialoguePanel(
   container: HTMLElement,
@@ -17,7 +18,7 @@ export function renderDialoguePanel(
 
   shell.innerHTML = `
     <div class="dialogue-header">
-      <img src="/icons/quest.svg" alt="Dialogue" />
+      <img src="${assetPath('squarelogo.PNG')}" alt="Dialogue" />
       <span>${dialogue.name}</span>
       <button type="button" class="dialogue-close">Close</button>
     </div>

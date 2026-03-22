@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Echoes of the Riftwar — Prototype</title>
-    <link rel="icon" type="image/png" href="/squarelogo.PNG" />
+    <link rel="icon" type="image/png" href="%BASE_URL%squarelogo.PNG" />
     <style>
       html, body {
         height: 100%;
@@ -18,14 +18,97 @@
           radial-gradient(circle at 18% 12%, rgba(109, 175, 255, 0.18), transparent 45%),
           radial-gradient(circle at 82% 20%, rgba(242, 182, 97, 0.16), transparent 38%),
           linear-gradient(180deg, #0a1320, #070d17),
-          url('/art/rift-lines.svg');
+          url('%BASE_URL%art/rift-lines.svg');
         background-size: auto, auto, auto, 420px 420px;
+        font-family: Georgia, 'Segoe UI', serif;
       }
 
       #app {
         position: relative;
         width: 100%;
         height: 100%;
+      }
+
+      .loading-screen {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(180deg, rgba(7, 12, 20, 0.86), rgba(4, 8, 14, 0.92)),
+          url('%BASE_URL%art/rift-noise.svg');
+        background-size: cover, 240px 240px;
+        z-index: 10;
+      }
+
+      .loading-screen.hidden {
+        display: none;
+      }
+
+      .loading-card {
+        width: min(720px, calc(100vw - 48px));
+        padding: 28px;
+        border-radius: 28px;
+        border: 1px solid rgba(171, 201, 255, 0.2);
+        background:
+          linear-gradient(180deg, rgba(16, 28, 46, 0.92), rgba(7, 13, 23, 0.94)),
+          url('%BASE_URL%art/rift-lines.svg');
+        background-size: cover, 320px 320px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+        color: #edf4ff;
+        text-align: center;
+      }
+
+      .loading-badge {
+        width: 72px;
+        height: 72px;
+        object-fit: cover;
+        border-radius: 18px;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+      }
+
+      .loading-header {
+        width: min(560px, 100%);
+        margin: 18px auto 12px;
+        display: block;
+      }
+
+      .loading-copy {
+        margin: 0 auto;
+        max-width: 560px;
+        color: #aebfd8;
+        line-height: 1.6;
+      }
+
+      .loading-bar {
+        width: min(420px, 100%);
+        height: 12px;
+        margin: 22px auto 10px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .loading-bar__fill {
+        width: 40%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #68b0ff, #f2be62, #8ae0bd);
+        animation: loading-pulse 1.4s ease-in-out infinite;
+      }
+
+      .loading-status {
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #f2be62;
+      }
+
+      @keyframes loading-pulse {
+        0% { transform: translateX(-40%); }
+        50% { transform: translateX(90%); }
+        100% { transform: translateX(-40%); }
       }
 
       #game {
@@ -38,6 +121,15 @@
   </head>
   <body>
     <div id="app">
+      <div id="loading-screen" class="loading-screen">
+        <div class="loading-card">
+          <img class="loading-badge" src="%BASE_URL%squarelogo.PNG" alt="Echoes crest" />
+          <img class="loading-header" src="%BASE_URL%headerlogo.PNG" alt="Echoes of the Riftwar" />
+          <p class="loading-copy">Rebuilding the frontier, stabilizing the Rift, and drawing the next road into view.</p>
+          <div class="loading-bar"><div class="loading-bar__fill"></div></div>
+          <div id="loading-status" class="loading-status">Initializing world systems</div>
+        </div>
+      </div>
       <canvas id="game"></canvas>
     </div>
     <script type="module" src="/src/main.ts"></script>
