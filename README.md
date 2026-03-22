@@ -1,8 +1,8 @@
 # Echoes of the Riftwar
 
-> **A Babylon.js real-time RPG prototype exploring reactive world state, dynamic quest progression, and environmental storytelling.**
+![Echoes of the Riftwar Header](public/headerlogo.PNG)
 
-![quest](public/icons/quest.svg) ![camp](public/icons/poi-camp.svg) ![dungeon](public/icons/poi-dungeon.svg) ![rift](public/icons/poi-rift.svg)
+> **A Babylon.js real-time RPG prototype exploring reactive world state, dynamic quest progression, and environmental storytelling.**
 
 ## Overview
 
@@ -182,5 +182,3 @@ This project uses a content-first approach:
 ---
 
 **Questions or contributions?** Open an issue or PR on GitHub.
-
-![dungeon](public/icons/poi-dungeon.svg) ![rift](public/icons/poi-rift.svg) ![bag](public/icons/bag.svg)
