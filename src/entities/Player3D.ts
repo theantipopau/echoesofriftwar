@@ -7,6 +7,16 @@ import { Entity3D } from './Entity3D'
 import { EquipmentSlot, ItemData } from '../data/types'
 import { PLAYER_SETTINGS } from '../config/gameBalance'
 
+export interface PlayerSnapshot {
+  level: number
+  experience: number
+  health: number
+  mana: number
+  position: { x: number; y: number; z: number }
+  inventoryItemIds: string[]
+  equipmentItemIds: Partial<Record<EquipmentSlot, string>>
+}
+
 export class Player3D extends Entity3D {
   private static keys: Record<string, boolean> = {}
   private static listenersAttached = false
@@ -26,6 +36,13 @@ export class Player3D extends Entity3D {
   private attackCooldown: number = 0
   private attackWindupRemaining: number = 0
   private pendingAttackHit = false
+  private dodgeCooldownRemaining = 0
+  private dodgeDurationRemaining = 0
+  private dodgeInvulnerabilityRemaining = 0
+  private dodgeDirection = new Vector3(0, 0, 1)
+  private readonly material: StandardMaterial
+  private staggerRemaining = 0
+  private hitFlashRemaining = 0
 
   constructor(scene: Scene, position: Vector3) {
     super(scene, 'player', position)
@@ -38,10 +55,10 @@ export class Player3D extends Entity3D {
     }, scene)
     this.mesh.position = position
 
-    const playerMaterial = new StandardMaterial('playerMaterial', scene)
-    playerMaterial.emissiveColor = new Color3(0.2, 0.5, 1)
-    playerMaterial.specularColor = new Color3(0.5, 0.5, 0.5)
-    this.mesh.material = playerMaterial
+    this.material = new StandardMaterial('playerMaterial', scene)
+    this.material.emissiveColor = new Color3(0.2, 0.5, 1)
+    this.material.specularColor = new Color3(0.5, 0.5, 0.5)
+    this.mesh.material = this.material
 
     // Setup input listeners
     this.setupInput()
@@ -71,9 +88,22 @@ export class Player3D extends Entity3D {
     if (Player3D.keys['a'] || Player3D.keys['arrowleft']) moveVector.x -= 1
     if (Player3D.keys['d'] || Player3D.keys['arrowright']) moveVector.x += 1
 
-    if (moveVector.length() > 0) {
+    const hasInput = moveVector.length() > 0
+    if (hasInput) {
       moveVector.normalize()
-      const move = moveVector.scale(this.speed * deltaTime)
+      this.dodgeDirection.copyFrom(moveVector)
+    }
+
+    const canMoveNormally = this.staggerRemaining <= 0
+    const effectiveMoveDirection = this.dodgeDurationRemaining > 0
+      ? this.dodgeDirection
+      : canMoveNormally
+        ? moveVector
+        : Vector3.Zero()
+
+    if (effectiveMoveDirection.length() > 0) {
+      const dodgeMultiplier = this.dodgeDurationRemaining > 0 ? PLAYER_SETTINGS.dodgeSpeedMultiplier : 1
+      const move = effectiveMoveDirection.scale(this.speed * dodgeMultiplier * deltaTime)
       this.mesh.position.addInPlace(move)
       this.isMoving = true
     } else {
@@ -83,6 +113,31 @@ export class Player3D extends Entity3D {
     // Update cooldowns
     if (this.attackCooldown > 0) {
       this.attackCooldown -= deltaTime
+    }
+
+    if (this.dodgeCooldownRemaining > 0) {
+      this.dodgeCooldownRemaining -= deltaTime
+    }
+
+    if (this.dodgeDurationRemaining > 0) {
+      this.dodgeDurationRemaining -= deltaTime
+    }
+
+    if (this.dodgeInvulnerabilityRemaining > 0) {
+      this.dodgeInvulnerabilityRemaining -= deltaTime
+    }
+
+    if (this.staggerRemaining > 0) {
+      this.staggerRemaining -= deltaTime
+    }
+
+    if (this.hitFlashRemaining > 0) {
+      this.hitFlashRemaining -= deltaTime
+      this.material.emissiveColor = Color3.Lerp(new Color3(0.2, 0.5, 1), Color3.White(), 0.75)
+    } else if (this.dodgeInvulnerabilityRemaining > 0) {
+      this.material.emissiveColor = Color3.Lerp(new Color3(0.2, 0.5, 1), new Color3(0.72, 0.96, 1), 0.55)
+    } else {
+      this.material.emissiveColor = new Color3(0.2, 0.5, 1)
     }
 
     if (this.attackWindupRemaining > 0) {
@@ -97,8 +152,14 @@ export class Player3D extends Entity3D {
   }
 
   public takeDamage(amount: number): number {
+    if (this.isInvulnerable()) {
+      return 0
+    }
+
     const reduced = Math.max(1, Math.round(amount - this.defense))
     this.health = Math.max(0, this.health - reduced)
+    this.hitFlashRemaining = 0.14
+    this.staggerRemaining = 0.16
     return reduced
   }
 
@@ -117,9 +178,8 @@ export class Player3D extends Entity3D {
   private levelUp(): void {
     this.level++
     this.experience = 0
-    this.maxHealth += PLAYER_SETTINGS.levelHealthGain
+    this.recalculateStats()
     this.health = this.maxHealth
-    this.maxMana += PLAYER_SETTINGS.levelManaGain
     this.mana = this.maxMana
     console.log(`⭐ Level up! You are now level ${this.level}`)
   }
@@ -179,7 +239,7 @@ export class Player3D extends Entity3D {
   }
 
   public attack(): boolean {
-    if (this.attackCooldown > 0 || this.attackWindupRemaining > 0) return false
+    if (this.attackCooldown > 0 || this.attackWindupRemaining > 0 || this.staggerRemaining > 0 || this.dodgeDurationRemaining > 0) return false
     this.attackCooldown = this.attackDelay
     this.attackWindupRemaining = PLAYER_SETTINGS.attackWindupSeconds
     this.pendingAttackHit = false
@@ -193,6 +253,43 @@ export class Player3D extends Entity3D {
 
     this.pendingAttackHit = false
     return true
+  }
+
+  public tryDodge(): boolean {
+    if (this.dodgeCooldownRemaining > 0 || this.dodgeDurationRemaining > 0) {
+      return false
+    }
+
+    if (this.mana < PLAYER_SETTINGS.dodgeManaCost) {
+      return false
+    }
+
+    this.mana = Math.max(0, this.mana - PLAYER_SETTINGS.dodgeManaCost)
+    this.dodgeCooldownRemaining = PLAYER_SETTINGS.dodgeCooldownSeconds
+    this.dodgeDurationRemaining = PLAYER_SETTINGS.dodgeDurationSeconds
+    this.dodgeInvulnerabilityRemaining = PLAYER_SETTINGS.dodgeInvulnerabilitySeconds
+    return true
+  }
+
+  public isInvulnerable(): boolean {
+    return this.dodgeInvulnerabilityRemaining > 0
+  }
+
+  public applyHitReaction(sourcePosition: Vector3, strength: number): void {
+    const away = this.mesh.position.subtract(sourcePosition)
+    away.y = 0
+    if (away.lengthSquared() === 0) {
+      away.copyFromFloats(0, 0, 1)
+    }
+    away.normalize()
+    this.mesh.position.addInPlace(away.scale(strength))
+    this.dodgeDirection.copyFrom(away)
+    this.hitFlashRemaining = 0.14
+    this.staggerRemaining = Math.max(this.staggerRemaining, 0.16)
+  }
+
+  public getFacingDirection(): Vector3 {
+    return this.dodgeDirection.clone()
   }
 
   public getAttackDamage(): number {
@@ -270,6 +367,56 @@ export class Player3D extends Entity3D {
     }
   }
 
+  public getSnapshot(): PlayerSnapshot {
+    const equipmentItemIds: Partial<Record<EquipmentSlot, string>> = {}
+    Object.entries(this.equipment).forEach(([slot, item]) => {
+      if (item) {
+        equipmentItemIds[slot as EquipmentSlot] = item.id
+      }
+    })
+
+    return {
+      level: this.level,
+      experience: this.experience,
+      health: this.health,
+      mana: this.mana,
+      position: {
+        x: this.mesh.position.x,
+        y: this.mesh.position.y,
+        z: this.mesh.position.z,
+      },
+      inventoryItemIds: this.inventory.map((item) => item.id),
+      equipmentItemIds,
+    }
+  }
+
+  public restoreFromSnapshot(snapshot: PlayerSnapshot, itemResolver: (itemId: string) => ItemData | undefined): void {
+    this.level = Math.max(1, Math.floor(snapshot.level || 1))
+    this.experience = Math.max(0, Math.floor(snapshot.experience || 0))
+
+    this.inventory = (snapshot.inventoryItemIds ?? [])
+      .map((itemId) => itemResolver(itemId))
+      .filter((item): item is ItemData => Boolean(item))
+
+    this.equipment = {}
+    Object.entries(snapshot.equipmentItemIds ?? {}).forEach(([slot, itemId]) => {
+      if (!itemId) {
+        return
+      }
+      const item = itemResolver(itemId)
+      if (!item) {
+        return
+      }
+      this.equipment[slot as EquipmentSlot] = item
+    })
+
+    this.recalculateStats()
+
+    this.health = Math.max(1, Math.min(this.maxHealth, snapshot.health || this.maxHealth))
+    this.mana = Math.max(0, Math.min(this.maxMana, snapshot.mana || this.maxMana))
+    this.setPosition(new Vector3(snapshot.position.x, snapshot.position.y, snapshot.position.z))
+  }
+
   private recalculateStats(): void {
     const items = Object.values(this.equipment).filter((item): item is ItemData => Boolean(item))
     const attackBonus = items.reduce((total, item) => total + (item.stats.attack ?? 0), 0)
@@ -277,14 +424,16 @@ export class Player3D extends Entity3D {
     const healthBonus = items.reduce((total, item) => total + (item.stats.maxHealth ?? 0), 0)
     const manaBonus = items.reduce((total, item) => total + (item.stats.maxMana ?? 0), 0)
     const speedBonus = items.reduce((total, item) => total + (item.stats.speed ?? 0), 0)
+    const levelHealthBonus = Math.max(0, this.level - 1) * PLAYER_SETTINGS.levelHealthGain
+    const levelManaBonus = Math.max(0, this.level - 1) * PLAYER_SETTINGS.levelManaGain
 
     this.attackDamage = PLAYER_SETTINGS.baseAttack + attackBonus
     this.defense = PLAYER_SETTINGS.baseDefense + defenseBonus
     this.speed = PLAYER_SETTINGS.baseSpeed + speedBonus
 
     const previousMaxHealth = this.maxHealth
-    this.maxHealth = PLAYER_SETTINGS.baseHealth + healthBonus
-    this.maxMana = PLAYER_SETTINGS.baseMana + manaBonus
+    this.maxHealth = PLAYER_SETTINGS.baseHealth + levelHealthBonus + healthBonus
+    this.maxMana = PLAYER_SETTINGS.baseMana + levelManaBonus + manaBonus
 
     if (this.maxHealth !== previousMaxHealth) {
       this.health = Math.min(this.health, this.maxHealth)

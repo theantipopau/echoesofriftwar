@@ -9,6 +9,7 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
 import { VertexBuffer } from '@babylonjs/core/Buffers/buffer'
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
+import { Texture } from '@babylonjs/core/Materials/Textures/texture'
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder'
 import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder'
 import { CreatePolyhedron } from '@babylonjs/core/Meshes/Builders/polyhedronBuilder'
@@ -71,6 +72,7 @@ export default class WorldManager {
   private dungeonEncounterAssignments = new Map<string, string>()
   private dungeonEncounterCounts = new Map<string, number>()
   private dungeonAutoVisitedIds = new Set<string>()
+  private lockedEnemyId: string | null = null
 
   constructor(scene: Scene, config: GameConfig, dependencies: WorldDependencies) {
     this.scene = scene
@@ -159,7 +161,13 @@ export default class WorldManager {
 
     const groundMaterial = new StandardMaterial('groundMaterial', this.scene)
     groundMaterial.emissiveColor = this.getBiomeColor(region.biome)
+    const terrainTexture = new Texture('/art/rift-noise.svg', this.scene)
+    terrainTexture.uScale = 45
+    terrainTexture.vScale = 45
+    groundMaterial.diffuseTexture = terrainTexture
+    groundMaterial.diffuseTexture.hasAlpha = false
     groundMaterial.specularColor = new Color3(0.15, 0.15, 0.15)
+    groundMaterial.specularPower = 24
     groundMaterial.checkReadyOnlyOnce = false
     ground.material = groundMaterial
 
@@ -224,6 +232,14 @@ export default class WorldManager {
     // Update player
     this.player.update(this.deltaTime)
 
+    if (this.input.wasKeyPressed('q')) {
+      this.cycleLockTarget()
+    }
+
+    this.validateLockTarget()
+    this.camera.setCombatFocus(this.getLockedEnemy()?.getPosition() ?? null)
+    this.dependencies.uiManager.updateCombatStatus(this.getCombatStatusText())
+
     // Update camera
     this.camera.update()
 
@@ -237,6 +253,13 @@ export default class WorldManager {
 
     if (this.input.wasKeyPressed(' ')) {
       this.player.attack()
+    }
+
+    if (this.input.wasKeyPressed('v')) {
+      const dodged = this.player.tryDodge()
+      if (!dodged) {
+        this.dependencies.uiManager.showNotification('Dodge unavailable', 'warning')
+      }
     }
 
     // Update enemies
@@ -253,26 +276,28 @@ export default class WorldManager {
         enemy.setTarget(this.player!.getPosition())
       }
 
-      if (distance < 2 && enemy.attack(this.player!)) {
+      if (distance < enemy.getAttackRange() && enemy.attack(this.player!)) {
         const damageTaken = this.player!.takeDamage(enemy.getAttackDamage())
         const popup = this.projectToScreen(this.player!.getPosition().add(new Vector3(0, 2.5, 0)))
-        this.dependencies.uiManager.showFloatingText(`-${damageTaken}`, popup.x, popup.y, 'error')
+        if (damageTaken <= 0) {
+          this.dependencies.uiManager.showFloatingText('DODGE', popup.x, popup.y, 'success')
+        } else {
+          this.player!.applyHitReaction(enemy.getPosition(), 1.1)
+          this.camera.addImpactKick(0.45)
+          this.dependencies.uiManager.showFloatingText(`-${damageTaken}`, popup.x, popup.y, 'error')
+        }
       }
     })
 
     if (this.player.consumeAttackHit()) {
       let landedHit = false
-      this.enemies.forEach((enemy) => {
-        const distance = Vector3.Distance(
-          enemy.getMesh().position,
-          this.player!.getMesh().position
-        )
-        if (distance < WORLD_SETTINGS.playerAttackRange) {
-          landedHit = true
-          const damage = enemy.takeDamage(this.player!.getAttackDamage())
-          const popup = this.projectToScreen(enemy.getPosition().add(new Vector3(0, 2.4, 0)))
-          this.dependencies.uiManager.showFloatingText(`-${damage}`, popup.x, popup.y, 'warning')
-        }
+      const attackTargets = this.getPlayerAttackTargets()
+      attackTargets.forEach((enemy) => {
+        landedHit = true
+        const damage = enemy.takeDamage(this.player!.getAttackDamage(), this.player!.getPosition())
+        const popup = this.projectToScreen(enemy.getPosition().add(new Vector3(0, 2.4, 0)))
+        this.camera.addImpactKick(0.24)
+        this.dependencies.uiManager.showFloatingText(`-${damage}`, popup.x, popup.y, 'warning')
       })
       if (!landedHit) {
         this.dependencies.uiManager.showNotification('Your strike cuts through empty air.', 'warning')
@@ -308,11 +333,99 @@ export default class WorldManager {
     // Clean up dead enemies
     this.enemies.forEach((enemy, id) => {
       if (enemy.isDead()) {
+        if (this.lockedEnemyId === id) {
+          this.lockedEnemyId = null
+        }
         this.handleEnemyDefeat(enemy, id)
         enemy.destroy()
         this.enemies.delete(id)
       }
     })
+  }
+
+  private getPlayerAttackTargets(): Enemy3D[] {
+    if (!this.player) {
+      return []
+    }
+
+    const lockedEnemy = this.getLockedEnemy()
+    if (lockedEnemy) {
+      const distance = Vector3.Distance(lockedEnemy.getPosition(), this.player.getPosition())
+      if (distance < WORLD_SETTINGS.playerAttackRange) {
+        return [lockedEnemy]
+      }
+    }
+
+    return Array.from(this.enemies.values()).filter((enemy) => {
+      const distance = Vector3.Distance(enemy.getMesh().position, this.player!.getMesh().position)
+      return distance < WORLD_SETTINGS.playerAttackRange
+    })
+  }
+
+  private getLockCandidates(): Array<{ id: string; enemy: Enemy3D; distance: number }> {
+    if (!this.player) {
+      return []
+    }
+
+    const facing = this.player.getFacingDirection().normalize()
+    return Array.from(this.enemies.entries())
+      .map(([id, enemy]) => {
+        const toEnemy = enemy.getPosition().subtract(this.player!.getPosition())
+        const distance = toEnemy.length()
+        const alignment = Vector3.Dot(toEnemy.normalize(), facing)
+        return { id, enemy, distance, alignment }
+      })
+      .filter((entry) => entry.distance <= ENEMY_SETTINGS.aggroRadius && entry.alignment >= 0.15)
+      .sort((left, right) => left.distance - right.distance)
+      .map(({ id, enemy, distance }) => ({ id, enemy, distance }))
+  }
+
+  private cycleLockTarget(): void {
+    const candidates = this.getLockCandidates()
+    if (candidates.length === 0) {
+      this.lockedEnemyId = null
+      this.dependencies.uiManager.showNotification('No target in front arc.', 'warning')
+      return
+    }
+
+    const currentIndex = candidates.findIndex((candidate) => candidate.id === this.lockedEnemyId)
+    const nextCandidate = candidates[(currentIndex + 1) % candidates.length]
+    this.lockedEnemyId = nextCandidate.id
+    this.dependencies.uiManager.showNotification(`Locked: ${nextCandidate.enemy.getData().name}`, 'info')
+  }
+
+  private validateLockTarget(): void {
+    if (!this.lockedEnemyId || !this.player) {
+      return
+    }
+
+    const enemy = this.enemies.get(this.lockedEnemyId)
+    if (!enemy) {
+      this.lockedEnemyId = null
+      return
+    }
+
+    const distance = Vector3.Distance(enemy.getPosition(), this.player.getPosition())
+    if (distance > ENEMY_SETTINGS.aggroRadius * 1.5) {
+      this.lockedEnemyId = null
+    }
+  }
+
+  private getLockedEnemy(): Enemy3D | null {
+    if (!this.lockedEnemyId) {
+      return null
+    }
+
+    return this.enemies.get(this.lockedEnemyId) ?? null
+  }
+
+  private getCombatStatusText(): string {
+    const lockedEnemy = this.getLockedEnemy()
+    if (!lockedEnemy) {
+      return 'Free target'
+    }
+
+    return `Locked on ${lockedEnemy.getData().name}`
   }
 
   private handleInteractions(): void {

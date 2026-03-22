@@ -2,6 +2,17 @@ import type { RegionData } from '../../data/types'
 import type { RegionProgressViewState } from '../ui/uiTypes'
 import type RegionManager from '../content/RegionManager'
 
+export interface RegionProgressionSnapshot {
+  unlockedRegionIds: string[]
+  completedQuestIds: string[]
+  discoveredPoiIds: string[]
+  resolvedEncounterIds: string[]
+  clearedDungeonIds: string[]
+  claimedDungeonRewardIds: string[]
+  worldStateTags: string[]
+  currentRegionId: string
+}
+
 export class RegionProgression {
   private unlockedRegionIds = new Set<string>()
   private completedQuestIds = new Set<string>()
@@ -36,6 +47,10 @@ export class RegionProgression {
     return this.unlockedRegionIds.has(regionId)
   }
 
+  public getCurrentRegionId(): string {
+    return this.currentRegionId
+  }
+
   public hasDiscoveredPoi(poiId: string): boolean {
     return this.discoveredPoiIds.has(poiId)
   }
@@ -61,6 +76,40 @@ export class RegionProgression {
 
   public hasWorldStateTag(tag: string): boolean {
     return this.worldStateTags.has(tag)
+  }
+
+  public getSnapshot(): RegionProgressionSnapshot {
+    return {
+      unlockedRegionIds: Array.from(this.unlockedRegionIds),
+      completedQuestIds: Array.from(this.completedQuestIds),
+      discoveredPoiIds: Array.from(this.discoveredPoiIds),
+      resolvedEncounterIds: Array.from(this.resolvedEncounterIds),
+      clearedDungeonIds: Array.from(this.clearedDungeonIds),
+      claimedDungeonRewardIds: Array.from(this.claimedDungeonRewardIds),
+      worldStateTags: Array.from(this.worldStateTags),
+      currentRegionId: this.currentRegionId,
+    }
+  }
+
+  public restoreFromSnapshot(snapshot: RegionProgressionSnapshot): void {
+    const validRegionIds = new Set(this.regionManager.getRegions().map((region) => region.id))
+
+    this.unlockedRegionIds = new Set((snapshot.unlockedRegionIds ?? []).filter((regionId) => validRegionIds.has(regionId)))
+    this.completedQuestIds = new Set(snapshot.completedQuestIds ?? [])
+    this.discoveredPoiIds = new Set(snapshot.discoveredPoiIds ?? [])
+    this.resolvedEncounterIds = new Set(snapshot.resolvedEncounterIds ?? [])
+    this.clearedDungeonIds = new Set(snapshot.clearedDungeonIds ?? [])
+    this.claimedDungeonRewardIds = new Set(snapshot.claimedDungeonRewardIds ?? [])
+    this.worldStateTags = new Set(snapshot.worldStateTags ?? [])
+
+    if (!this.unlockedRegionIds.has(snapshot.currentRegionId)) {
+      const firstRegion = Array.from(this.unlockedRegionIds)[0] ?? ''
+      this.currentRegionId = firstRegion
+    } else {
+      this.currentRegionId = snapshot.currentRegionId
+    }
+
+    this.evaluateUnlocks()
   }
 
   public isEncounterResolved(encounterId: string): boolean {

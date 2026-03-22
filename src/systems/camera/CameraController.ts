@@ -12,6 +12,8 @@ export class CameraController {
   private distance: number = 20
   private height: number = 12
   private angle: number = 0
+  private combatFocus: Vector3 | null = null
+  private kickOffset = Vector3.Zero()
 
   constructor(scene: Scene) {
     this.scene = scene
@@ -30,16 +32,30 @@ export class CameraController {
     this.target = entity
   }
 
+  public setCombatFocus(point: Vector3 | null): void {
+    this.combatFocus = point ? point.clone() : null
+  }
+
+  public addImpactKick(intensity: number): void {
+    this.kickOffset.addInPlace(new Vector3((Math.random() - 0.5) * intensity, intensity * 0.4, -intensity))
+  }
+
   public update(): void {
     if (!this.target) return
 
     const targetPos = this.target.getPosition()
     const cameraPos = this.camera.position
+    const anchorPoint = this.combatFocus
+      ? Vector3.Lerp(targetPos, this.combatFocus, 0.35)
+      : targetPos.clone()
+
+    this.kickOffset.scaleInPlace(0.82)
 
     // Calculate desired position
-    const desiredX = targetPos.x + this.offset.x
-    const desiredY = targetPos.y + this.offset.y
-    const desiredZ = targetPos.z + this.offset.z
+    const focusDistanceBoost = this.combatFocus ? 1.14 : 1
+    const desiredX = anchorPoint.x + this.offset.x * focusDistanceBoost + this.kickOffset.x
+    const desiredY = anchorPoint.y + this.offset.y + this.kickOffset.y
+    const desiredZ = anchorPoint.z + this.offset.z * focusDistanceBoost + this.kickOffset.z
 
     // Smooth camera movement
     cameraPos.x += (desiredX - cameraPos.x) * this.smoothness
@@ -47,7 +63,7 @@ export class CameraController {
     cameraPos.z += (desiredZ - cameraPos.z) * this.smoothness
 
     // Look at player with slight offset above
-    const lookAtPoint = targetPos.clone()
+    const lookAtPoint = anchorPoint.clone()
     lookAtPoint.y += 1
     this.camera.setTarget(lookAtPoint)
   }

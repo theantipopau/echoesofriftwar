@@ -160,6 +160,10 @@ export class UIManager {
     this.setText('exp-text', experience.toString())
   }
 
+  public updateCombatStatus(text: string): void {
+    this.setText('combat-status-text', text)
+  }
+
   public async showDialogue(dialogue: DialogueViewState, onSelect: (optionId: string) => void, onClose: () => void): Promise<void> {
     this.dialogueMount.classList.remove('hidden')
     const renderer = await this.ensureDialogueRenderer()
@@ -204,7 +208,7 @@ export class UIManager {
 
   private createHUD(): void {
     this.hud.innerHTML = `
-      <div class="panel-title">Echoes of the Riftwar</div>
+      <div class="panel-title"><img class="panel-title__logo" src="/squarelogo.PNG" alt="Echoes crest" /> Echoes of the Riftwar</div>
       <div class="hud-block">
         <div class="bar-label"><span>Health</span><span id="health-text">100/100</span></div>
         <div class="bar-track"><div id="health-fill" class="bar-fill bar-fill--health"></div></div>
@@ -217,7 +221,8 @@ export class UIManager {
         <div>Level <strong id="level-text">1</strong></div>
         <div>EXP <strong id="exp-text">0</strong></div>
       </div>
-      <div class="hud-controls">WASD move • Space attack • E talk • I inventory</div>
+      <div class="hud-status">Combat: <strong id="combat-status-text">Free target</strong></div>
+      <div class="hud-controls">WASD move • Q lock • V dodge • Space attack • E talk • I inventory • F5 save • F9 load</div>
     `
 
     this.healthBarFill = this.hud.querySelector('#health-fill')
@@ -267,16 +272,19 @@ export class UIManager {
         --ui-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
       }
       .ui-root { position: absolute; inset: 0; pointer-events: none; font-family: Georgia, 'Segoe UI', serif; color: var(--ui-text); }
-      .hud-shell, .quest-shell { position: absolute; backdrop-filter: blur(10px); background: linear-gradient(180deg, rgba(20,34,56,0.9), rgba(9,14,24,0.9)); border: 1px solid var(--ui-border); border-radius: 18px; box-shadow: var(--ui-shadow); pointer-events: auto; }
+      .hud-shell, .quest-shell { position: absolute; backdrop-filter: blur(10px); background-image: linear-gradient(180deg, rgba(20,34,56,0.9), rgba(9,14,24,0.9)), url('/art/rift-noise.svg'); background-size: cover, 220px 220px; background-repeat: no-repeat, repeat; border: 1px solid var(--ui-border); border-radius: 18px; box-shadow: var(--ui-shadow); pointer-events: auto; }
       .hud-shell { top: 18px; left: 18px; width: 300px; padding: 18px; }
       .quest-shell { top: 18px; right: 18px; width: 320px; padding: 18px; }
       .panel-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; letter-spacing: 0.03em; margin-bottom: 14px; }
       .panel-title img { width: 18px; height: 18px; }
+      .panel-title__logo { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(255,255,255,0.2); }
       .panel-title--spaced { margin-top: 18px; }
       .panel-title--small { font-size: 13px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ui-muted); }
       .hud-block { margin-bottom: 12px; }
       .bar-label, .hud-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--ui-muted); margin-bottom: 6px; }
       .hud-meta { margin-top: 10px; color: var(--ui-text); }
+      .hud-status { margin-top: 10px; font-size: 12px; color: var(--ui-muted); }
+      .hud-status strong { color: #f0d264; font-weight: 700; }
       .bar-track { height: 14px; border-radius: 999px; background: rgba(255,255,255,0.1); overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
       .bar-fill { height: 100%; border-radius: inherit; transition: width 160ms ease; }
       .bar-fill--health { background: linear-gradient(90deg, #3ac47d, #f0d264); }
@@ -309,7 +317,7 @@ export class UIManager {
       .world-popup--info { color: #d7e6ff; }
       .modal-mount { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 32px; pointer-events: auto; background: rgba(5, 8, 15, 0.52); }
       .modal-mount.hidden { display: none; }
-      .inventory-shell, .dialogue-shell { width: min(1080px, calc(100vw - 80px)); border-radius: 24px; background: linear-gradient(180deg, rgba(22,34,56,0.98), rgba(10,16,28,0.98)); border: 1px solid var(--ui-border); box-shadow: var(--ui-shadow); }
+      .inventory-shell, .dialogue-shell { width: min(1080px, calc(100vw - 80px)); border-radius: 24px; background-image: linear-gradient(180deg, rgba(22,34,56,0.98), rgba(10,16,28,0.98)), url('/art/rift-lines.svg'); background-size: cover, 300px 300px; border: 1px solid var(--ui-border); box-shadow: var(--ui-shadow); }
       .inventory-shell { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.9fr); gap: 20px; padding: 24px; }
       .inventory-column { min-width: 0; }
       .inventory-column--narrow { border-left: 1px solid rgba(255,255,255,0.08); padding-left: 20px; }

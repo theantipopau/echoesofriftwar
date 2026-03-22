@@ -18,6 +18,16 @@ export interface QuestEventResult {
   rewards?: string[]
 }
 
+export interface QuestJournalSnapshot {
+  completedQuestIds: string[]
+  activeQuests: Array<{
+    questId: string
+    progress: Record<string, number>
+    completed: boolean
+    rewarded: boolean
+  }>
+}
+
 export class QuestJournal {
   private activeQuests = new Map<string, ActiveQuest>()
   private completedQuestIds = new Set<string>()
@@ -90,6 +100,53 @@ export class QuestJournal {
 
   public getCompletedQuestIds(): string[] {
     return Array.from(this.completedQuestIds)
+  }
+
+  public getSnapshot(): QuestJournalSnapshot {
+    return {
+      completedQuestIds: Array.from(this.completedQuestIds),
+      activeQuests: Array.from(this.activeQuests.values()).map((quest) => ({
+        questId: quest.data.id,
+        progress: { ...quest.progress },
+        completed: quest.completed,
+        rewarded: quest.rewarded,
+      })),
+    }
+  }
+
+  public restoreFromSnapshot(snapshot: QuestJournalSnapshot): void {
+    this.activeQuests.clear()
+    this.completedQuestIds = new Set(snapshot.completedQuestIds ?? [])
+
+    ;(snapshot.activeQuests ?? []).forEach((savedQuest) => {
+      const data = this.questManager.getQuest(savedQuest.questId)
+      if (!data) {
+        return
+      }
+
+      const progress = data.objectives.reduce((accumulator, objective) => {
+        const target = objective.count ?? 1
+        const savedValue = savedQuest.progress?.[objective.id] ?? 0
+        accumulator[objective.id] = Math.max(0, Math.min(target, savedValue))
+        return accumulator
+      }, {} as Record<string, number>)
+
+      const completed = savedQuest.completed || data.objectives.every((objective) => {
+        const current = progress[objective.id] ?? 0
+        return this.isObjectiveComplete(objective, current)
+      })
+
+      if (completed) {
+        this.completedQuestIds.add(data.id)
+      }
+
+      this.activeQuests.set(data.id, {
+        data,
+        progress,
+        completed,
+        rewarded: Boolean(savedQuest.rewarded),
+      })
+    })
   }
 
   private advanceByType(type: QuestObjective['type'], targetId: string, player: Player3D): QuestEventResult {

@@ -16,6 +16,7 @@ import DungeonContentManager from '../content/DungeonContentManager'
 import { UIManager } from '../ui/UIManager'
 import { QuestJournal } from './QuestJournal'
 import { RegionProgression } from './RegionProgression'
+import SaveSystem from './SaveSystem'
 import type { InventoryViewState } from '../ui/uiTypes'
 import type { ItemData, ItemStats } from '../../data/types'
 
@@ -35,6 +36,9 @@ export default class GameManager {
   private uiManager: UIManager
   private questJournal: QuestJournal
   private regionProgression: RegionProgression
+  private saveSystem: SaveSystem
+  private lastAutosaveTimestamp = Date.now()
+  private readonly autosaveIntervalMs = 60000
 
   // Content managers
   private itemManager: ItemManager
@@ -62,6 +66,7 @@ export default class GameManager {
     this.dungeonContentManager = new DungeonContentManager()
     this.questJournal = new QuestJournal(this.questManager, this.itemManager)
     this.regionProgression = new RegionProgression(this.regionManager)
+    this.saveSystem = new SaveSystem()
 
     this.uiManager.setInventoryHandlers({
       onEquip: (itemId) => {
@@ -100,6 +105,7 @@ export default class GameManager {
     })
 
     this.setupScene()
+    this.setupPersistenceShortcuts()
   }
 
   private setupScene(): void {
@@ -140,25 +146,9 @@ export default class GameManager {
 
     this.regionProgression.initialize('crydee')
 
-    if (!(await this.travelToRegion('crydee'))) {
-      console.warn('⚠️  Start region not found, using first available region')
-      const regions = this.regionManager.getRegions()
-      if (regions.length > 0) {
-        await this.travelToRegion(regions[0].id)
-      }
-    }
-
-    const player = this.worldManager.getPlayer()
-    if (player) {
-      const starterItems = ['bronze_sword', 'leather_armor', 'healing_potion']
-      starterItems.forEach((itemId) => {
-        const item = this.itemManager.getItem(itemId)
-        if (item) {
-          player.addToInventory(item)
-        }
-      })
-      player.equipFromInventory('bronze_sword')
-      player.equipFromInventory('leather_armor')
+    const restored = await this.loadGameFromDisk('startup')
+    if (!restored) {
+      await this.initializeNewGame()
     }
 
     this.uiManager.updateRegionProgress(this.regionProgression.getViewState())
@@ -167,6 +157,11 @@ export default class GameManager {
   public update(): void {
     // Game logic updates
     this.worldManager.update()
+
+    if (Date.now() - this.lastAutosaveTimestamp >= this.autosaveIntervalMs) {
+      this.saveGame('auto')
+      this.lastAutosaveTimestamp = Date.now()
+    }
 
     // Update UI with player stats
     const player = this.worldManager.getPlayer()
@@ -244,6 +239,101 @@ export default class GameManager {
     await this.worldManager.generateWorld(region)
     this.regionProgression.setCurrentRegion(region.id)
     this.uiManager.updateRegionProgress(this.regionProgression.getViewState())
+    this.saveGame('checkpoint')
+    return true
+  }
+
+  private setupPersistenceShortcuts(): void {
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'F5') {
+        event.preventDefault()
+        this.saveGame('manual')
+      }
+
+      if (event.key === 'F9') {
+        event.preventDefault()
+        void this.loadGameFromDisk('manual')
+      }
+    })
+  }
+
+  private async initializeNewGame(): Promise<void> {
+    if (!(await this.travelToRegion('crydee'))) {
+      console.warn('⚠️  Start region not found, using first available region')
+      const regions = this.regionManager.getRegions()
+      if (regions.length > 0) {
+        await this.travelToRegion(regions[0].id)
+      }
+    }
+
+    const player = this.worldManager.getPlayer()
+    if (!player) {
+      return
+    }
+
+    const starterItems = ['bronze_sword', 'leather_armor', 'healing_potion']
+    starterItems.forEach((itemId) => {
+      const item = this.itemManager.getItem(itemId)
+      if (item) {
+        player.addToInventory(item)
+      }
+    })
+    player.equipFromInventory('bronze_sword')
+    player.equipFromInventory('leather_armor')
+    this.saveGame('checkpoint')
+  }
+
+  private saveGame(reason: 'manual' | 'auto' | 'checkpoint'): boolean {
+    const player = this.worldManager.getPlayer()
+    if (!player) {
+      return false
+    }
+
+    const saved = this.saveSystem.save({
+      currentRegionId: this.regionProgression.getCurrentRegionId(),
+      player: player.getSnapshot(),
+      questJournal: this.questJournal.getSnapshot(),
+      regionProgression: this.regionProgression.getSnapshot(),
+    })
+
+    if (reason === 'manual') {
+      this.uiManager.showNotification(saved ? 'Game saved.' : 'Save failed.', saved ? 'success' : 'error')
+    }
+
+    return saved
+  }
+
+  private async loadGameFromDisk(trigger: 'startup' | 'manual'): Promise<boolean> {
+    const snapshot = this.saveSystem.load()
+    if (!snapshot) {
+      if (trigger === 'manual') {
+        this.uiManager.showNotification('No save slot found.', 'warning')
+      }
+      return false
+    }
+
+    this.questJournal.restoreFromSnapshot(snapshot.questJournal)
+    this.regionProgression.restoreFromSnapshot(snapshot.regionProgression)
+
+    const fallbackRegionId = this.regionManager.getRegions()[0]?.id ?? 'crydee'
+    const targetRegionId = snapshot.currentRegionId || this.regionProgression.getCurrentRegionId() || fallbackRegionId
+
+    if (!(await this.travelToRegion(targetRegionId))) {
+      if (!(await this.travelToRegion(fallbackRegionId))) {
+        return false
+      }
+    }
+
+    const player = this.worldManager.getPlayer()
+    if (!player) {
+      return false
+    }
+
+    player.restoreFromSnapshot(snapshot.player, (itemId) => this.itemManager.getItem(itemId))
+    this.lastAutosaveTimestamp = Date.now()
+    if (trigger === 'manual') {
+      this.uiManager.showNotification('Save loaded.', 'success')
+    }
     return true
   }
 

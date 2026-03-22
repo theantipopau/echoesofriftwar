@@ -6,6 +6,11 @@ export const PLAYER_SETTINGS = {
   baseDefense: 1,
   attackDelaySeconds: 0.5,
   attackWindupSeconds: 0.12,
+  dodgeCooldownSeconds: 0.8,
+  dodgeDurationSeconds: 0.24,
+  dodgeInvulnerabilitySeconds: 0.18,
+  dodgeSpeedMultiplier: 2.8,
+  dodgeManaCost: 14,
   manaRegenPerSecond: 5,
   levelHealthGain: 10,
   levelManaGain: 5,
@@ -15,6 +20,7 @@ export const PLAYER_SETTINGS = {
 export const ENEMY_SETTINGS = {
   patrolRange: 10,
   attackRange: 3,
+  attackWindupSeconds: 0.42,
   attackCooldownSeconds: 1.5,
   aggroRadius: 15,
 }

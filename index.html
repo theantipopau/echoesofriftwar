@@ -4,12 +4,22 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Echoes of the Riftwar — Prototype</title>
+    <link rel="icon" type="image/png" href="/squarelogo.PNG" />
     <style>
       html, body {
         height: 100%;
         margin: 0;
         overflow: hidden;
-        background: #0d1320;
+        background:
+          radial-gradient(circle at 18% 12%, rgba(109, 175, 255, 0.18), transparent 45%),
+          radial-gradient(circle at 82% 20%, rgba(242, 182, 97, 0.16), transparent 38%),
+          linear-gradient(180deg, #0a1320, #070d17);
+        background-image:
+          radial-gradient(circle at 18% 12%, rgba(109, 175, 255, 0.18), transparent 45%),
+          radial-gradient(circle at 82% 20%, rgba(242, 182, 97, 0.16), transparent 38%),
+          linear-gradient(180deg, #0a1320, #070d17),
+          url('/art/rift-lines.svg');
+        background-size: auto, auto, auto, 420px 420px;
       }
 
       #app {
