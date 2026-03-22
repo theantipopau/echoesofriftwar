@@ -1,11 +1,10 @@
 import { Engine } from '@babylonjs/core/Engines/engine'
 import { Scene } from '@babylonjs/core/scene'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
-import { Color3 } from '@babylonjs/core/Maths/math.color'
-import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
+import { CubeTexture } from '@babylonjs/core/Materials/Textures/cubeTexture'
+import { ColorCurves } from '@babylonjs/core/Materials/colorCurves'
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight'
 import { PointLight } from '@babylonjs/core/Lights/pointLight'
-import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
 import WorldManager from '../world/WorldManager'
 import ItemManager from '../content/ItemManager'
 import NPCManager from '../content/NPCManager'
@@ -111,19 +110,34 @@ export default class GameManager {
   private setupScene(): void {
     // Lighting
     const ambientLight = new HemisphericLight('ambientLight', new Vector3(0.5, 1, 0.5), this.scene)
-    ambientLight.intensity = 0.8
+    ambientLight.intensity = 0.45   // IBL from env texture supplements this
 
     const directionalLight = new PointLight('directionalLight', new Vector3(10, 20, 10), this.scene)
     directionalLight.intensity = 0.6
     directionalLight.range = 100
 
-    // Skybox
-    const skybox = CreateBox('skybox', { size: 5000 }, this.scene)
-    const skyboxMaterial = new StandardMaterial('skyboxMaterial', this.scene)
-    skyboxMaterial.emissiveColor = new Color3(0.15, 0.2, 0.3)
-    skyboxMaterial.backFaceCulling = false
-    skyboxMaterial.disableLighting = true
-    skybox.material = skyboxMaterial
+    // HDR environment + skybox from BabylonJS Assets CDN (CC-BY-4.0)
+    // environmentSpecular.env provides both IBL ambient lighting and the skybox texture
+    const envTex = CubeTexture.CreateFromPrefilteredData(
+      'https://assets.babylonjs.com/environments/environmentSpecular.env',
+      this.scene
+    )
+    this.scene.createDefaultSkybox(envTex, true, 2000, 0.3, true)
+    this.scene.environmentIntensity = 0.6
+
+    // Color grading — cool, desaturated rift atmosphere (no external LUT file needed)
+    const imgProc = this.scene.imageProcessingConfiguration
+    imgProc.isEnabled = true
+    imgProc.contrast = 1.35
+    imgProc.exposure = 0.82
+    imgProc.colorCurvesEnabled = true
+    const curves = new ColorCurves()
+    curves.globalSaturation = 65        // slightly desaturated / gritty
+    curves.highlightsHue = 215          // cool blue-purple highlights
+    curves.highlightsWeight = 0.25
+    curves.shadowsHue = 220             // blue-purple shadows
+    curves.shadowsDensity = 0.4
+    imgProc.colorCurves = curves
   }
 
   async start(): Promise<void> {
