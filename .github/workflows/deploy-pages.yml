@@ -34,13 +34,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build site
-        run: npm run build
+      - name: Build root shell
+        run: npm run build -- --outDir pages
+
+      - name: Build fallback play app
+        run: npm run build -- --outDir pages/play
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ./pages
 
   deploy:
     needs: build
