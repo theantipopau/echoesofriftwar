@@ -1,0 +1,182 @@
+[
+  {
+    "id": "bronze_sword",
+    "name": "Bronze Sword",
+    "type": "weapon",
+    "rarity": "common",
+    "stats": { "attack": 2 },
+    "description": "A simple blade forged in Crydee. Reliable for a new adventurer.",
+    "loreText": "A sword used by frontier guards. It has seen skirmishes with bandits and slavers.",
+    "visual": { "spriteKey": "item_bronze_sword", "layer": "weapon" }
+  },
+  {
+    "id": "leather_armor",
+    "name": "Leather Armor",
+    "type": "armor",
+    "rarity": "common",
+    "stats": { "defense": 1 },
+    "description": "Light armor that allows freedom of movement.",
+    "loreText": "Made from cured hides in the western woods, it offers little protection against magic.",
+    "visual": { "spriteKey": "item_leather_armor", "layer": "armor" }
+  },
+  {
+    "id": "healing_potion",
+    "name": "Healing Potion",
+    "type": "consumable",
+    "rarity": "common",
+    "stats": { "maxHealth": 20 },
+    "description": "A small vial of restorative liquid.",
+    "loreText": "Brewed by apothecaries around Crydee, it restores vitality in a pinch.",
+    "visual": { "spriteKey": "item_healing_potion" }
+  },
+  {
+    "id": "iron_dagger",
+    "name": "Iron Dagger",
+    "type": "weapon",
+    "rarity": "uncommon",
+    "stats": { "attack": 4, "speed": 10 },
+    "description": "A sharper blade favored by scouts and rogues.",
+    "loreText": "Crafted by a Krondor smith, its edge holds longer than common iron.",
+    "visual": { "spriteKey": "item_iron_dagger", "layer": "weapon" }
+  },
+  {
+    "id": "sturdy_shield",
+    "name": "Sturdy Shield",
+    "type": "armor",
+    "rarity": "uncommon",
+    "stats": { "defense": 2 },
+    "description": "A reinforced wooden shield, good for defense.",
+    "loreText": "Used by Crydee guards to hold the line against raiders.",
+    "visual": { "spriteKey": "item_sturdy_shield", "layer": "accessory" }
+  },
+  {
+    "id": "tattered_cloak",
+    "name": "Tattered Cloak",
+    "type": "armor",
+    "rarity": "common",
+    "stats": { "defense": 0 },
+    "description": "A worn cloak that guards against wind and cold.",
+    "loreText": "Many refugees wear similar cloaks after fleeing the battle-scarred countryside.",
+    "visual": { "spriteKey": "item_tattered_cloak", "layer": "armor" }
+  },
+  {
+    "id": "ritual_dust",
+    "name": "Ritual Dust",
+    "type": "material",
+    "rarity": "rare",
+    "stats": {},
+    "description": "A vial of powder used in arcane rituals.",
+    "loreText": "Rumored to be harvested from the ruins where rifts appear.",
+    "visual": { "spriteKey": "item_ritual_dust" }
+  },
+  {
+    "id": "traveler_rations",
+    "name": "Traveler Rations",
+    "type": "consumable",
+    "rarity": "common",
+    "stats": { "maxHealth": 10 },
+    "description": "Simple dried food to stave off hunger.",
+    "loreText": "Carried by every caravan on the road to Crydee.",
+    "visual": { "spriteKey": "item_traveler_rations" }
+  },
+  {
+    "id": "old_ring",
+    "name": "Old Ring",
+    "type": "quest",
+    "rarity": "uncommon",
+    "stats": {},
+    "description": "A ring inscribed with a forgotten name.",
+    "loreText": "Found at the edge of the forest ruins, it hums faintly when rifts are near.",
+    "visual": { "spriteKey": "item_old_ring" }
+  },
+  {
+    "id": "tarnished_medallion",
+    "name": "Tarnished Medallion",
+    "type": "quest",
+    "rarity": "rare",
+    "stats": {},
+    "description": "An ancient medallion marked with a strange symbol.",
+    "loreText": "Sealed in the ruins for a time long forgotten; it resonates with the Rift.",
+    "visual": { "spriteKey": "item_tarnished_medallion" }
+  },
+  {
+    "id": "crydee_horse",
+    "name": "Crydee Horse",
+    "type": "mount",
+    "rarity": "uncommon",
+    "stats": { "speed": 20 },
+    "description": "A sturdy mount bred in Crydee, good for covering ground quickly.",
+    "loreText": "Used by scouts and messengers to traverse the frontier swiftly.",
+    "visual": { "spriteKey": "mount_crydee_horse" }
+  },
+  {
+    "id": "pack_mule",
+    "name": "Pack Mule",
+    "type": "mount",
+    "rarity": "common",
+    "stats": { "speed": 10 },
+    "description": "A reliable beast of burden, slow but able to carry supplies.",
+    "loreText": "Merchants rely on pack mules to move goods between duchies.",
+    "visual": { "spriteKey": "mount_pack_mule" }
+  },
+  {
+    "id": "rift_crystal",
+    "name": "Rift Crystal",
+    "type": "relic",
+    "rarity": "rare",
+    "stats": {},
+    "description": "A shard of concentrated Rift energy.",
+    "loreText": "Rumoured to be a piece of the world before the Rift, it pulses with power.",
+    "visual": { "spriteKey": "relic_rift_crystal" }
+  },
+  {
+    "id": "lesser_path_grimoire",
+    "name": "Lesser Path Grimoire",
+    "type": "relic",
+    "rarity": "epic",
+    "stats": {},
+    "description": "A tome bound in shifting leather, containing lesser path secrets.",
+    "loreText": "Crafted by a master of the Lesser Path, it offers insight into disciplined magic.",
+    "visual": { "spriteKey": "relic_lessser_path_grimoire" }
+  },
+  {
+    "id": "trench_knife",
+    "name": "Trench Knife",
+    "type": "weapon",
+    "rarity": "uncommon",
+    "stats": { "attack": 5, "speed": 6 },
+    "description": "A brutal close-quarters blade carried by warfront raiders.",
+    "loreText": "Its guard is wrapped in old banner cloth from a road company that never reached Krondor.",
+    "visual": { "spriteKey": "item_trench_knife", "layer": "weapon" }
+  },
+  {
+    "id": "wardens_seal",
+    "name": "Warden's Seal",
+    "type": "relic",
+    "rarity": "rare",
+    "stats": { "defense": 1, "maxHealth": 15 },
+    "description": "A battered seal-ring worn by the road wardens guarding the approaches inland.",
+    "loreText": "The seal bears a faded road mark pointing toward Krondor, a promise of safer lands farther east.",
+    "visual": { "spriteKey": "relic_wardens_seal", "layer": "accessory" }
+  },
+  {
+    "id": "krondor_dispatches",
+    "name": "Krondor Dispatches",
+    "type": "quest",
+    "rarity": "rare",
+    "stats": {},
+    "description": "A sealed dispatch satchel recovered from the Culvert Breach cache.",
+    "loreText": "The roadwarden reports inside detail broken routes, failed signal relays, and a desperate plan to reopen the Krondor road before the warfront collapses entirely.",
+    "visual": { "spriteKey": "quest_krondor_dispatches" }
+  },
+  {
+    "id": "roadwarden_relay",
+    "name": "Roadwarden Relay",
+    "type": "relic",
+    "rarity": "epic",
+    "stats": { "attack": 3, "defense": 2, "maxHealth": 20 },
+    "description": "A reclaimed signal relay shard that still carries a low war-hum beneath the Rift static.",
+    "loreText": "Recovered from the heart of the Culvert Breach, the relay is proof that the war and the Rift are now fused into the same failing infrastructure.",
+    "visual": { "spriteKey": "relic_roadwarden_relay", "layer": "accessory" }
+  }
+]

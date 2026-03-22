@@ -1,0 +1,292 @@
+import { Engine } from '@babylonjs/core/Engines/engine'
+import { Scene } from '@babylonjs/core/scene'
+import { Vector3 } from '@babylonjs/core/Maths/math.vector'
+import { Color3 } from '@babylonjs/core/Maths/math.color'
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
+import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight'
+import { PointLight } from '@babylonjs/core/Lights/pointLight'
+import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
+import WorldManager from '../world/WorldManager'
+import ItemManager from '../content/ItemManager'
+import NPCManager from '../content/NPCManager'
+import EnemyManager from '../content/EnemyManager'
+import RegionManager from '../content/RegionManager'
+import QuestManager from '../content/QuestManager'
+import DungeonContentManager from '../content/DungeonContentManager'
+import { UIManager } from '../ui/UIManager'
+import { QuestJournal } from './QuestJournal'
+import { RegionProgression } from './RegionProgression'
+import type { InventoryViewState } from '../ui/uiTypes'
+import type { ItemData, ItemStats } from '../../data/types'
+
+export interface GameConfig {
+  engine: Engine
+  canvas: HTMLCanvasElement
+  worldSize: number
+  tileSize: number
+  heightmapScale: number
+}
+
+export default class GameManager {
+  private scene: Scene
+  private engine: Engine
+  private config: GameConfig
+  private worldManager: WorldManager
+  private uiManager: UIManager
+  private questJournal: QuestJournal
+  private regionProgression: RegionProgression
+
+  // Content managers
+  private itemManager: ItemManager
+  private npcManager: NPCManager
+  private enemyManager: EnemyManager
+  private regionManager: RegionManager
+  private questManager: QuestManager
+  private dungeonContentManager: DungeonContentManager
+
+  constructor(config: GameConfig) {
+    this.config = config
+    this.engine = config.engine
+    this.scene = new Scene(this.engine)
+    this.scene.collisionsEnabled = true
+
+    // Initialize UI
+    this.uiManager = new UIManager()
+
+    // Initialize content managers
+    this.itemManager = new ItemManager()
+    this.npcManager = new NPCManager()
+    this.enemyManager = new EnemyManager()
+    this.regionManager = new RegionManager()
+    this.questManager = new QuestManager()
+    this.dungeonContentManager = new DungeonContentManager()
+    this.questJournal = new QuestJournal(this.questManager, this.itemManager)
+    this.regionProgression = new RegionProgression(this.regionManager)
+
+    this.uiManager.setInventoryHandlers({
+      onEquip: (itemId) => {
+        const player = this.worldManager.getPlayer()
+        if (!player) {
+          return
+        }
+        this.uiManager.showNotification(player.equipFromInventory(itemId), 'info')
+      },
+      onConsume: (itemId) => {
+        const player = this.worldManager.getPlayer()
+        if (!player) {
+          return
+        }
+        this.uiManager.showNotification(player.consumeItem(itemId), 'success')
+      },
+      onUnequip: (slot) => {
+        const player = this.worldManager.getPlayer()
+        if (!player) {
+          return
+        }
+        this.uiManager.showNotification(player.unequipToInventory(slot), 'info')
+      },
+    })
+
+    // Initialize world manager
+    this.worldManager = new WorldManager(this.scene, config, {
+      enemyManager: this.enemyManager,
+      itemManager: this.itemManager,
+      npcManager: this.npcManager,
+      questJournal: this.questJournal,
+      regionProgression: this.regionProgression,
+      dungeonContentManager: this.dungeonContentManager,
+      uiManager: this.uiManager,
+      onTravelToRegion: (regionId: string) => this.travelToRegion(regionId),
+    })
+
+    this.setupScene()
+  }
+
+  private setupScene(): void {
+    // Lighting
+    const ambientLight = new HemisphericLight('ambientLight', new Vector3(0.5, 1, 0.5), this.scene)
+    ambientLight.intensity = 0.8
+
+    const directionalLight = new PointLight('directionalLight', new Vector3(10, 20, 10), this.scene)
+    directionalLight.intensity = 0.6
+    directionalLight.range = 100
+
+    // Skybox
+    const skybox = CreateBox('skybox', { size: 5000 }, this.scene)
+    const skyboxMaterial = new StandardMaterial('skyboxMaterial', this.scene)
+    skyboxMaterial.emissiveColor = new Color3(0.15, 0.2, 0.3)
+    skyboxMaterial.backFaceCulling = false
+    skyboxMaterial.disableLighting = true
+    skybox.material = skyboxMaterial
+  }
+
+  async start(): Promise<void> {
+    // Load all content data
+    await Promise.all([
+      this.itemManager.load(),
+      this.npcManager.load(),
+      this.enemyManager.load(),
+      this.regionManager.load(),
+      this.questManager.load(),
+      this.dungeonContentManager.load()
+    ])
+
+    console.log('✅ Game initialized with Babylon.js')
+    console.log('📦 Items loaded:', this.itemManager.getItems().length)
+    console.log('🧙 NPCs loaded:', this.npcManager.getNPCs().length)
+    console.log('👹 Enemies loaded:', this.enemyManager.getEnemies().length)
+    console.log('🗺️  Regions loaded:', this.regionManager.getRegions().length)
+    console.log('🕳️  Dungeons loaded:', this.dungeonContentManager.getDungeons().length)
+
+    this.regionProgression.initialize('crydee')
+
+    if (!(await this.travelToRegion('crydee'))) {
+      console.warn('⚠️  Start region not found, using first available region')
+      const regions = this.regionManager.getRegions()
+      if (regions.length > 0) {
+        await this.travelToRegion(regions[0].id)
+      }
+    }
+
+    const player = this.worldManager.getPlayer()
+    if (player) {
+      const starterItems = ['bronze_sword', 'leather_armor', 'healing_potion']
+      starterItems.forEach((itemId) => {
+        const item = this.itemManager.getItem(itemId)
+        if (item) {
+          player.addToInventory(item)
+        }
+      })
+      player.equipFromInventory('bronze_sword')
+      player.equipFromInventory('leather_armor')
+    }
+
+    this.uiManager.updateRegionProgress(this.regionProgression.getViewState())
+  }
+
+  public update(): void {
+    // Game logic updates
+    this.worldManager.update()
+
+    // Update UI with player stats
+    const player = this.worldManager.getPlayer()
+    if (player) {
+      this.uiManager.updateHealth(player.getHealth(), player.getMaxHealth())
+      this.uiManager.updateMana(player.getMana(), player.getMaxMana())
+      this.uiManager.updateLevel(player.getLevel(), player.getExperience())
+      this.uiManager.updateInventoryState(this.buildInventoryState(player))
+    }
+
+    this.uiManager.updateQuestTracker(this.questJournal.getViewState())
+    this.uiManager.updateRegionProgress(this.regionProgression.getViewState())
+  }
+
+  public getScene(): Scene {
+    return this.scene
+  }
+
+  public getEngine(): Engine {
+    return this.engine
+  }
+
+  public getConfig(): GameConfig {
+    return this.config
+  }
+
+  // Accessor methods for managers
+  public getItemManager(): ItemManager {
+    return this.itemManager
+  }
+
+  public getNPCManager(): NPCManager {
+    return this.npcManager
+  }
+
+  public getEnemyManager(): EnemyManager {
+    return this.enemyManager
+  }
+
+  public getRegionManager(): RegionManager {
+    return this.regionManager
+  }
+
+  public getQuestManager(): QuestManager {
+    return this.questManager
+  }
+
+  public getWorldManager(): WorldManager {
+    return this.worldManager
+  }
+
+  public getUIManager(): UIManager {
+    return this.uiManager
+  }
+
+  private async travelToRegion(regionId: string): Promise<boolean> {
+    if (!this.regionProgression.isRegionUnlocked(regionId)) {
+      const message = this.regionProgression.getUnlockHint(regionId)
+      this.uiManager.showNotification(message, 'warning')
+      return false
+    }
+
+    const region = this.regionManager.getRegionById(regionId)
+    if (!region) {
+      this.uiManager.showNotification(`Region not found: ${regionId}`, 'error')
+      return false
+    }
+
+    if (region.playable === false) {
+      this.uiManager.showNotification(`Route to ${region.name} secured. The forward sector is charted and ready for the next expansion.`, 'success')
+      this.uiManager.updateRegionProgress(this.regionProgression.getViewState())
+      return true
+    }
+
+    await this.worldManager.generateWorld(region)
+    this.regionProgression.setCurrentRegion(region.id)
+    this.uiManager.updateRegionProgress(this.regionProgression.getViewState())
+    return true
+  }
+
+  private buildInventoryState(player: import('../../entities/Player3D').Player3D): InventoryViewState {
+    return {
+      items: player.getInventory().map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: item.type,
+        rarity: item.rarity,
+        description: item.description,
+        stats: this.normalizeStats(item.stats),
+      })),
+      equipment: ['weapon', 'chest', 'accessory'].map((slot) => {
+        const item = player.getEquipment()[slot as keyof ReturnType<typeof player.getEquipment>] ?? null
+        return {
+          slot,
+          item: item ? this.mapInventoryItem(item) : null,
+        }
+      }),
+      stats: player.getDerivedStats(),
+    }
+  }
+
+  private mapInventoryItem(item: ItemData) {
+    return {
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      rarity: item.rarity,
+      description: item.description,
+      stats: this.normalizeStats(item.stats),
+    }
+  }
+
+  private normalizeStats(stats: ItemStats): Record<string, number | undefined> {
+    return {
+      attack: stats.attack,
+      defense: stats.defense,
+      maxHealth: stats.maxHealth,
+      maxMana: stats.maxMana,
+      crit: stats.crit,
+      speed: stats.speed,
+    }
+  }
+}

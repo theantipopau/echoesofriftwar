@@ -1,0 +1,142 @@
+[
+  {
+    "id": "quest_rift_rumor",
+    "title": "Whispers of the Rift",
+    "description": "Investigate the strange rift activity near Crydee and report back.",
+    "objectives": [
+      { "id": "find_rift", "description": "Find the rift site near the forest ruins.", "type": "visit", "targetId": "rift_site" }
+    ],
+    "rewards": [
+      { "experience": 50 },
+      { "itemId": "healing_potion" }
+    ],
+    "linkedNpcs": ["beren_thal"],
+    "branching": false
+  },
+  {
+    "id": "quest_guardians_help",
+    "title": "Aid the Crydee Guard",
+    "description": "Help defend the frontier by clearing out nearby bandit camps.",
+    "objectives": [
+      { "id": "kill_bandits", "description": "Defeat 3 bandits near the western trail.", "type": "kill", "targetId": "bandit", "count": 3 }
+    ],
+    "rewards": [
+      { "experience": 80 },
+      { "itemId": "sturdy_shield" }
+    ],
+    "linkedNpcs": ["beren_thal"],
+    "branching": false
+  },
+  {
+    "id": "quest_forest_clear",
+    "title": "Clear the Outskirts",
+    "description": "Scouts have reported corrupted wolves roaming the forest. Eliminate the threat.",
+    "objectives": [
+      { "id": "kill_wolves", "description": "Defeat 3 corrupted wolves in the Forest Outskirts.", "type": "kill", "targetId": "corrupted_wolf", "count": 3 }
+    ],
+    "rewards": [
+      { "experience": 120 },
+      { "itemId": "rift_crystal" }
+    ],
+    "linkedNpcs": ["lost_scout"],
+    "branching": false
+  },
+  {
+    "id": "quest_rift_site",
+    "title": "Beneath the Corrupted Grove",
+    "description": "Enter the Rift site and destroy the guardian within.",
+    "objectives": [
+      { "id": "visit_rift", "description": "Approach the Rift site in the forest.", "type": "visit", "targetId": "rift_site" },
+      { "id": "slay_guardian", "description": "Defeat the Rift Guardian inside.", "type": "kill", "targetId": "rift_guardian", "count": 1 }
+    ],
+    "rewards": [
+      { "experience": 220 },
+      { "itemId": "lesser_path_grimoire" }
+    ],
+    "linkedNpcs": ["lost_scout"],
+    "branching": false
+  },
+  {
+    "id": "quest_warfront_patrol",
+    "title": "Mud and Iron",
+    "description": "Captain Rennic needs the approach stabilized before more refugees can move east. Secure the Ashfall Redoubt and break the raider line around it.",
+    "objectives": [
+      { "id": "visit_redoubt", "description": "Reach Ashfall Redoubt.", "type": "visit", "targetId": "ashfall_redoubt" },
+      { "id": "kill_raiders", "description": "Defeat 2 Trench Raiders near the redoubt.", "type": "kill", "targetId": "trench_raider", "count": 2 }
+    ],
+    "rewards": [
+      { "experience": 180 },
+      { "itemId": "trench_knife" }
+    ],
+    "linkedNpcs": ["captain_rennic"],
+    "branching": false
+  },
+  {
+    "id": "quest_signal_road",
+    "title": "Signals for Krondor",
+    "description": "Scout Tavia wants the road signs and signal points checked before the next convoy attempts the inland route.",
+    "objectives": [
+      { "id": "visit_signal_tower", "description": "Inspect the Broken Signal Tower.", "type": "visit", "targetId": "broken_signal_tower" },
+      { "id": "visit_milestone", "description": "Reach the Krondor Mileway marker.", "type": "visit", "targetId": "krondor_milestone" }
+    ],
+    "rewards": [
+      { "experience": 220 },
+      { "itemId": "wardens_seal" }
+    ],
+    "linkedNpcs": ["scout_tavia"],
+    "branching": false
+  },
+  {
+    "id": "quest_culvert_breach",
+    "title": "Under the War Road",
+    "description": "Investigate the Culvert Breach, destroy the corruption source below, and recover anything that explains what happened to the roadwardens posted there.",
+    "objectives": [
+      { "id": "reach_breach", "description": "Reach the Culvert Breach in Warfront Approach.", "type": "visit", "targetId": "culvert_breach" },
+      { "id": "find_heart", "description": "Locate the Rift heart inside the breach.", "type": "visit", "targetId": "culvert_heart" },
+      { "id": "kill_overseer", "description": "Defeat the Culvert Overseer.", "type": "kill", "targetId": "culvert_overseer", "count": 1 },
+      { "id": "recover_dispatches", "description": "Recover the roadwarden dispatch cache.", "type": "visit", "targetId": "culvert_dispatch_cache" },
+      { "id": "report_rennic", "description": "Bring the dispatches back to Captain Rennic.", "type": "talk", "targetId": "captain_rennic_return", "requiredObjectiveIds": ["recover_dispatches"] }
+    ],
+    "rewards": [
+      { "experience": 320 },
+      { "itemId": "roadwarden_relay" }
+    ],
+    "linkedNpcs": ["captain_rennic"],
+    "branching": false
+  },
+  {
+    "id": "quest_outer_roads_patrol",
+    "title": "The Outer Road Opens",
+    "description": "Veteran Kess and the merchant outpost need the Outer Roads secured. Clear the corrupted creatures and ensure the eastern passage is passable.",
+    "objectives": [
+      { "id": "visit_merchant_post", "description": "Reach the Krondor Merchant Post.", "type": "visit", "targetId": "krondor_merchants" },
+      { "id": "clear_post_guards", "description": "Defeat 2 creatures near the merchant post.", "type": "kill", "targetId": "siege_hound", "count": 2 },
+      { "id": "check_caravan", "description": "Investigate the broken caravan.", "type": "visit", "targetId": "broken_caravan" },
+      { "id": "clear_scavengers", "description": "Defeat 2 creatures scavenging the caravan.", "type": "kill", "targetId": "war_wretch", "count": 2 },
+      { "id": "reach_passage", "description": "Reach the Eastern Passage checkpoint.", "type": "visit", "targetId": "eastern_passage" },
+      { "id": "report_kess", "description": "Report success to Veteran Kess.", "type": "talk", "targetId": "veteran_kess_return", "requiredObjectiveIds": ["reach_passage"] }
+    ],
+    "rewards": [
+      { "experience": 300 },
+      { "itemId": "roadwarden_relay" }
+    ],
+    "linkedNpcs": ["veteran_kess"],
+    "branching": false
+  },
+  {
+    "id": "quest_rift_ritual",
+    "title": "The Inner Nexus",
+    "description": "A Rift ritual is taking place deeper in the Outer Roads. Stop the Rift channeling before it tears the region open wider.",
+    "objectives": [
+      { "id": "approach_nexus", "description": "Reach the Inner Rift Nexus.", "type": "visit", "targetId": "inner_rift_shard" },
+      { "id": "slay_harbinger", "description": "Defeat the Rift Harbinger.", "type": "kill", "targetId": "rift_harbinger", "count": 1 },
+      { "id": "return_alive", "description": "Return to report the ritual's end.", "type": "talk", "targetId": "dispatcher_galt_return", "requiredObjectiveIds": ["slay_harbinger"] }
+    ],
+    "rewards": [
+      { "experience": 400 },
+      { "itemId": "tarnished_medallion" }
+    ],
+    "linkedNpcs": ["dispatcher_galt"],
+    "branching": false
+  }
+]

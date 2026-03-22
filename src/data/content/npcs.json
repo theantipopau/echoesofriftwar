@@ -1,0 +1,815 @@
+[
+  {
+    "id": "crydee_guard",
+    "name": "Crydee Guard",
+    "role": "story",
+    "faction": "Kingdom of the Isles",
+    "regionId": "crydee",
+    "position": { "x": 520, "y": 300 },
+    "portraitKey": "portraits_guard",
+    "shortBio": "A stalwart guard manning the approach to Crydee Keep.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "Greetings, traveler. Keep your wits about you; the roads are not safe.",
+        "options": [
+          { "id": "ask_rifts", "text": "What can you tell me about the rifts?", "next": "rifts_intro" },
+          { "id": "ask_help", "text": "Is there anything I can do to help?", "next": "help_offer" },
+          { "id": "goodbye", "text": "I should be going.", "next": "end" }
+        ]
+      },
+      "rifts_intro": {
+        "id": "rifts_intro",
+        "text": "They are tears in the world. Monsters pour through them, and the earth itself turns strange.",
+        "options": [
+          { "id": "offer_help", "text": "I will investigate.", "next": "end" },
+          { "id": "goodbye", "text": "Stay safe.", "next": "end" }
+        ]
+      },
+      "help_offer": {
+        "id": "help_offer",
+        "text": "The captain at the keep is recruiting folks to patrol the road. Speak with him if you want work.",
+        "options": [
+          { "id": "thanks", "text": "Thank you.", "next": "end" }
+        ]
+      },
+      "end": {
+        "id": "end",
+        "text": "May fortune favor you.",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "larat_merchant",
+    "name": "Larat Merchant",
+    "role": "merchant",
+    "faction": "Crydee Trade",
+    "regionId": "crydee",
+    "position": { "x": 360, "y": 460 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A trader from Larat who travels between towns with goods.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "If you have coin, I have wares. I also hear rumours about the rift creatures.",
+        "options": [
+          { "id": "shop", "text": "Let me see what you have.", "actions": ["open_shop"], "next": "end" },
+          { "id": "rumors", "text": "What have you heard?", "next": "rumors" },
+          { "id": "leave", "text": "Maybe later.", "next": "end" }
+        ]
+      },
+      "rumors": {
+        "id": "rumors",
+        "text": "They say the rifts hum at night, and those who listen go missing. Best keep your head down.",
+        "options": [
+          { "id": "thanks", "text": "Thanks for the warning.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Safe travels.", "options": [] }
+    }
+  },
+  {
+    "id": "apprentice_mage",
+    "name": "Apprentice Mage",
+    "role": "trainer",
+    "faction": "Crydee Mages Guild",
+    "regionId": "crydee",
+    "position": { "x": 460, "y": 340 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A young mage learning the Lesser Path in Crydee.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "The rift energy is unlike anything I've studied. If only we had more books.",
+        "options": [
+          { "id": "learn", "text": "Teach me something.", "actions": ["open_training"], "next": "end" },
+          { "id": "goodbye", "text": "I'll leave you to your studies.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Be careful; the Rift is not to be trifled with.", "options": [] }
+    }
+  },
+  {
+    "id": "village_elder",
+    "name": "Village Elder",
+    "role": "quest",
+    "faction": "Larat Village",
+    "regionId": "crydee",
+    "position": { "x": 320, "y": 500 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "The elderly leader of Larat, worried about raids.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "Our scouts have seen strange creatures near the western trail. We need someone to investigate.",
+        "options": [
+          { "id": "accept", "text": "I will look into it.", "actions": ["start_quest_find_rift"], "next": "end" },
+          { "id": "decline", "text": "Not my concern.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Return when you have news.", "options": [] }
+    }
+  },
+  {
+    "id": "beren_thal",
+    "name": "Beren Thal",
+    "role": "story",
+    "faction": "Crydee Rangers",
+    "regionId": "crydee",
+    "position": { "x": 450, "y": 280 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A ranger tracking Rift creatures along the frontier.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "The rifts are waking up again. I've marked the places where their creatures are most active.",
+        "options": [
+          { "id": "ask_tracks", "text": "What do you look for?", "next": "tracks" },
+          { "id": "ask_help", "text": "How can I help?", "actions": ["startQuest:quest_guardians_help"], "next": "help" },
+          { "id": "leave", "text": "I'll be on my way.", "actions": ["talk:beren_thal"], "next": "end" }
+        ]
+      },
+      "tracks": {
+        "id": "tracks",
+        "text": "They leave a shimmering residue and strange footprints. Follow the trail if you want to find a rift.",
+        "options": [
+          { "id": "thanks", "text": "Thanks for the tip.", "next": "end" }
+        ]
+      },
+      "help": {
+        "id": "help",
+        "text": "If you can clear a few of the beasts, I'll mark the path for you. Stay sharp.",
+        "options": [
+          { "id": "accept", "text": "I'll do it.", "actions": ["startQuest:quest_rift_rumor"], "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Watch your step out there.", "options": [] }
+    }
+  },
+  {
+    "id": "elira_voss",
+    "name": "Elira Voss",
+    "role": "trainer",
+    "faction": "Crydee Mages Guild",
+    "regionId": "crydee",
+    "position": { "x": 470, "y": 360 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "An eager apprentice experimenting with Rift energy.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "I'm trying to draw a thread of Rift magic without being consumed by it.",
+        "options": [
+          { "id": "ask_rift", "text": "What's the Rift like?", "next": "rift" },
+          { "id": "offer_help", "text": "Need an extra pair of hands?", "next": "help" },
+          { "id": "leave", "text": "I should go.", "next": "end" }
+        ]
+      },
+      "rift": {
+        "id": "rift",
+        "text": "It hums and tastes like iron. The farther you go, the harder it is to keep your mind.",
+        "options": [
+          { "id": "caution", "text": "Sounds dangerous.", "next": "end" }
+        ]
+      },
+      "help": {
+        "id": "help",
+        "text": "Bring me a Rift Crystal if you find one. I can use it to stabilize the energies.",
+        "options": [
+          { "id": "will_do", "text": "I’ll bring one back.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Be careful near the rifts.", "options": [] }
+    }
+  },
+  {
+    "id": "torvin_hale",
+    "name": "Torvin Hale",
+    "role": "merchant",
+    "faction": "Crydee Smiths",
+    "regionId": "crydee",
+    "position": { "x": 520, "y": 410 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "The practical blacksmith of Crydee, always sharpening weapons.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "If you bring me steel and coin, I can make you something that holds an edge.",
+        "options": [
+          { "id": "trade", "text": "Show me your wares.", "actions": ["open_shop"], "next": "end" },
+          { "id": "ask_upgrade", "text": "Can you upgrade my gear?", "next": "upgrade" },
+          { "id": "leave", "text": "Later then.", "next": "end" }
+        ]
+      },
+      "upgrade": {
+        "id": "upgrade",
+        "text": "I can reinforce a weapon for extra damage. Bring me a Rift Crystal and some iron.",
+        "options": [
+          { "id": "understood", "text": "I'll get the materials.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Don't go breaking anything I made.", "options": [] }
+    }
+  },
+  {
+    "id": "mara_kethryn",
+    "name": "Mara Kethryn",
+    "role": "merchant",
+    "faction": "Crydee Traders",
+    "regionId": "crydee",
+    "position": { "x": 360, "y": 440 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A shrewd trader with secrets to sell.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "I hear things... and I sell things. Both can be useful.",
+        "options": [
+          { "id": "ask_info", "text": "What news do you have?", "next": "news" },
+          { "id": "trade", "text": "Show me what you offer.", "actions": ["open_shop"], "next": "end" },
+          { "id": "leave", "text": "I'll be going.", "next": "end" }
+        ]
+      },
+      "news": {
+        "id": "news",
+        "text": "They say the rift creatures are gathering for something. Could be a trap.",
+        "options": [
+          { "id": "thanks", "text": "Thanks for the warning.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Keep your coin close.", "options": [] }
+    }
+  },
+  {
+    "id": "brother_caldus",
+    "name": "Brother Caldus",
+    "role": "quest",
+    "faction": "Crydee Priory",
+    "regionId": "crydee",
+    "position": { "x": 400, "y": 340 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A quiet priest who watches over the faithful.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "The Rift brings not only monsters, but sorrow. We must choose compassion.",
+        "options": [
+          { "id": "inquiring", "text": "How can I help?", "next": "help" },
+          { "id": "leave", "text": "I'll pray for guidance.", "next": "end" }
+        ]
+      },
+      "help": {
+        "id": "help",
+        "text": "Bring comfort to those torn by the Rift. Find the wounded near the ruins.",
+        "options": [
+          { "id": "accept", "text": "I'll seek them out.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "May the Light guide you.", "options": [] }
+    }
+  },
+  {
+    "id": "lost_scout",
+    "name": "Lost Scout",
+    "role": "story",
+    "faction": "Crydee Rangers",
+    "regionId": "forest_outskirts",
+    "position": { "x": 520, "y": 260 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A ranger separated from their patrol, hiding from the forest beasts.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "I got separated from my unit. The woods are crawling with those corrupted wolves.",
+        "options": [
+          { "id": "help", "text": "I'll clear them out.", "actions": ["startQuest:quest_forest_clear"], "next": "thanks" },
+          { "id": "leave", "text": "Stay safe.", "next": "end" }
+        ]
+      },
+      "thanks": {
+        "id": "thanks",
+        "text": "Thank you. If you can bring me any Rift Crystals you find, I can use them to warn the others.",
+        "options": [{ "id": "will_do", "text": "I'll keep an eye out.", "next": "end" }]
+      },
+      "end": { "id": "end", "text": "Watch your step in the thickets.", "options": [] }
+    }
+  },
+  {
+    "id": "herbalist_myla",
+    "name": "Herbalist Myla",
+    "role": "story",
+    "faction": "Forest Folk",
+    "regionId": "forest_outskirts",
+    "position": { "x": 580, "y": 300 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A forager studying strange plants growing near the Rift.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "The plants here are changing. I can feel the Rift leeching into the soil.",
+        "options": [
+          { "id": "ask", "text": "What have you found?", "next": "findings" },
+          { "id": "leave", "text": "I'll let you work.", "next": "end" }
+        ]
+      },
+      "findings": {
+        "id": "findings",
+        "text": "There are crystals that hum when you get close. They're dangerous, but powerful.",
+        "options": [
+          { "id": "thanks", "text": "I'll be careful.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Don't touch the blue ones. They bite.", "options": [] }
+    }
+  },
+  {
+    "id": "captain_rennic",
+    "name": "Captain Rennic Vale",
+    "role": "quest",
+    "faction": "Road Wardens",
+    "regionId": "warfront_approach",
+    "position": { "x": 210, "y": 400 },
+    "portraitKey": "portraits_guard",
+    "shortBio": "A road captain holding together a thin defensive line between the forest and the warfront.",
+    "conditionalStartNodes": [
+      {
+        "nodeId": "dispatch_turnin",
+        "activeQuestIds": ["quest_culvert_breach"],
+        "requiredItemIds": ["krondor_dispatches"],
+        "blockedWorldStateTags": ["route_krondor_secured"]
+      },
+      {
+        "nodeId": "breach_progress",
+        "activeQuestIds": ["quest_culvert_breach"],
+        "blockedWorldStateTags": ["route_krondor_secured"]
+      },
+      {
+        "nodeId": "secured_route",
+        "requiredWorldStateTags": ["route_krondor_secured"]
+      }
+    ],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "This road used to feed armies. Now it spits back raiders, deserters, and worse. If you can still stand, I have work.",
+        "options": [
+          { "id": "accept_patrol", "text": "Point me where the line is breaking.", "actions": ["startQuest:quest_warfront_patrol"], "next": "patrol" },
+          { "id": "accept_breach", "text": "Tell me about the breach under the road.", "actions": ["startQuest:quest_culvert_breach"], "next": "breach" },
+          { "id": "ask_krondor", "text": "Does this road still reach Krondor?", "next": "krondor" },
+          { "id": "leave", "text": "I'll scout the road.", "next": "end" }
+        ]
+      },
+      "patrol": {
+        "id": "patrol",
+        "text": "Ashfall Redoubt is still ours on paper. In truth, the raiders are testing it every night. Clear them out and we can keep the road breathing.",
+        "options": [
+          { "id": "understood", "text": "I'll handle it.", "next": "end" }
+        ]
+      },
+      "breach": {
+        "id": "breach",
+        "text": "The culvert below the road was meant to drain the trenches. Now it breathes purple light and chews through stone. One of our dispatch caches is still down there, if the corruption hasn't eaten it.",
+        "options": [
+          { "id": "take_breach", "text": "I'll go below and finish it.", "next": "end" }
+        ]
+      },
+      "breach_progress": {
+        "id": "breach_progress",
+        "text": "If you haven't found that dispatch satchel yet, keep moving. The culvert was the artery for every supply line on this approach, and the Rift is learning how to pulse through it.",
+        "options": [
+          { "id": "back_down", "text": "I'm heading back under.", "next": "end" }
+        ]
+      },
+      "dispatch_turnin": {
+        "id": "dispatch_turnin",
+        "text": "You made it back from below. Is that our dispatch satchel? If the seals survived, we can finally tell which eastern lines are still breathing.",
+        "options": [
+          {
+            "id": "hand_dispatches",
+            "text": "Hand over the Krondor dispatches.",
+            "actions": ["consumeItem:krondor_dispatches", "setWorldState:warfront_culvert_stabilized", "setWorldState:route_krondor_secured", "talk:captain_rennic_return"],
+            "next": "secured_briefing"
+          },
+          { "id": "hold_them", "text": "Not yet.", "next": "end" }
+        ]
+      },
+      "secured_briefing": {
+        "id": "secured_briefing",
+        "text": "These reports confirm it. The outer road still exists in fragments, and the relay line can be relit from the mileway. We'll move supplies up, post fresh wardens, and push east before the war closes again.",
+        "options": [
+          { "id": "acknowledge", "text": "Then the road to Krondor is opening.", "next": "end" }
+        ]
+      },
+      "secured_route": {
+        "id": "secured_route",
+        "text": "Your breach run changed the whole approach. The camp is moving again, the relay crew is working the mileway, and the outer road to Krondor is finally secured enough for scouts.",
+        "options": [
+          { "id": "ask_inland", "text": "What lies ahead inland?", "next": "inland_warning" },
+          { "id": "leave", "text": "I'll see how far the road now reaches.", "next": "end" }
+        ]
+      },
+      "inland_warning": {
+        "id": "inland_warning",
+        "text": "Broken convoys. Starved garrisons. Signal towers speaking in the Rift's voice. If this is only the edge of the inland roads, Krondor is going to be worse than rumor says.",
+        "options": [
+          { "id": "grim_acceptance", "text": "Then I'll be ready for it.", "next": "end" }
+        ]
+      },
+      "krondor": {
+        "id": "krondor",
+        "text": "If this approach holds, the inland caravans can run again. That's the first real step toward opening the road to Krondor.",
+        "options": [
+          { "id": "back", "text": "Then let's make sure it holds.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Watch the ditches. The dead don't stay quiet here.", "options": [] }
+    }
+  },
+  {
+    "id": "scout_tavia",
+    "name": "Scout Tavia Dorn",
+    "role": "quest",
+    "faction": "Crydee Rangers",
+    "regionId": "warfront_approach",
+    "position": { "x": 250, "y": 360 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A mud-streaked scout charting which parts of the old military road still exist.",
+    "conditionalStartNodes": [
+      {
+        "nodeId": "secured_start",
+        "requiredWorldStateTags": ["route_krondor_secured"]
+      }
+    ],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "The signal towers went dark before the road patrols vanished. If we're opening the frontier, someone has to trace the markers east.",
+        "options": [
+          { "id": "take_route", "text": "I'll check the road markers.", "actions": ["startQuest:quest_signal_road"], "next": "route" },
+          { "id": "ask_tension", "text": "What happened here?", "next": "history" },
+          { "id": "leave", "text": "Stay low out here.", "next": "end" }
+        ]
+      },
+      "route": {
+        "id": "route",
+        "text": "Start with the broken signal tower, then follow the old road stones until you reach the Krondor mileway. If those still stand, the world is bigger than this trench.",
+        "options": [
+          { "id": "go", "text": "I'll bring back a route report.", "next": "end" }
+        ]
+      },
+      "history": {
+        "id": "history",
+        "text": "Too many banners, not enough food, and then the Rift opened in the culverts beneath the road. The soldiers blamed each other while the land turned against everyone.",
+        "options": [
+          { "id": "grim", "text": "That explains the silence.", "next": "end" }
+        ]
+      },
+      "secured_start": {
+        "id": "secured_start",
+        "text": "The relay is lit and the outer road markers are finally talking back. It's only a thin line east, but it's a real one now. Krondor won't feel close for long.",
+        "options": [
+          { "id": "ask_breakdown", "text": "What changed in the dispatches?", "next": "dispatch_reading" },
+          { "id": "leave", "text": "I'll take the opened road when I'm ready.", "next": "end" }
+        ]
+      },
+      "dispatch_reading": {
+        "id": "dispatch_reading",
+        "text": "Supply ledgers, missing signal crews, and reports of whole culverts glowing from below. The war isn't just losing ground inland. It's hollowing out.",
+        "options": [
+          { "id": "understood", "text": "Then the next stretch will be worse.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "If you hear metal scraping under the road, don't lean over the edge.", "options": [] }
+    }
+  },
+  {
+    "id": "camp_marshal_iona",
+    "name": "Marshal Iona Vex",
+    "role": "story",
+    "faction": "Refugee Convoy",
+    "regionId": "warfront_approach",
+    "position": { "x": 170, "y": 450 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A convoy marshal trying to move civilians through a road built for soldiers.",
+    "conditionalStartNodes": [
+      {
+        "nodeId": "secured_start",
+        "requiredWorldStateTags": ["route_krondor_secured"]
+      }
+    ],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "Every cart here carries someone who thought the war was farther away than this. It wasn't.",
+        "options": [
+          { "id": "ask_people", "text": "Why stay on the road at all?", "next": "people" },
+          { "id": "leave", "text": "I'll keep the road safer where I can.", "next": "end" }
+        ]
+      },
+      "people": {
+        "id": "people",
+        "text": "Because behind us is hunger and ahead of us is a chance. If this approach holds, more families make it through. If it fails, the frontier closes again.",
+        "options": [
+          { "id": "nod", "text": "Then it needs to hold.", "next": "end" }
+        ]
+      },
+      "secured_start": {
+        "id": "secured_start",
+        "text": "You can feel it already. The soldiers have stopped speaking like they're burying this road, and the caravans are lining up to move east before the weather or the Rift shuts it again.",
+        "options": [
+          { "id": "ask_refugees", "text": "Will people really risk the inland road now?", "next": "refugees_move" },
+          { "id": "leave", "text": "At least the choice exists again.", "next": "end" }
+        ]
+      },
+      "refugees_move": {
+        "id": "refugees_move",
+        "text": "They will, because standing still is worse. That's what the war has become: lines of people choosing which danger looks more survivable.",
+        "options": [
+          { "id": "grim_road", "text": "Then the road matters more than ever.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "The road remembers every army that marched it. Let's make it remember something better.", "options": [] }
+    }
+  },
+  {
+    "id": "relay_engineer_ves",
+    "name": "Engineer Ves Marr",
+    "role": "story",
+    "faction": "Road Wardens",
+    "regionId": "warfront_approach",
+    "position": { "x": 214, "y": 438 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A relay engineer hauling signal gear back onto the road as fast as troops can clear it.",
+    "requiredWorldStateTags": ["route_krondor_secured"],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "The dispatches gave us the last relay sequence. If we can keep these towers lit, the outer roads stop being rumor and start becoming a line again.",
+        "options": [
+          { "id": "ask_relay", "text": "So the signals are live again?", "next": "relay" },
+          { "id": "leave", "text": "Keep the line alive.", "next": "end" }
+        ]
+      },
+      "relay": {
+        "id": "relay",
+        "text": "Barely. Every mile inland, the light gets dirtier. Something is answering the towers now, and I don't think it's entirely human.",
+        "options": [
+          { "id": "uneasy", "text": "I'll remember that.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "If the lamp shifts purple, run.", "options": [] }
+    }
+  },
+  {
+    "id": "roadwarden_hal",
+    "name": "Roadwarden Hal Reeve",
+    "role": "story",
+    "faction": "Road Wardens",
+    "regionId": "warfront_approach",
+    "position": { "x": 154, "y": 396 },
+    "portraitKey": "portraits_guard",
+    "shortBio": "A newly posted warden assigned to hold the road after the Culvert Breach was cleared.",
+    "requiredWorldStateTags": ["route_krondor_secured"],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "We weren't here yesterday. That's how fast things changed once those dispatches came back. One breach sealed, one road reopened, one more place to die farther east.",
+        "options": [
+          { "id": "ask_post", "text": "You're holding the route now?", "next": "post" },
+          { "id": "leave", "text": "Hold it as long as you can.", "next": "end" }
+        ]
+      },
+      "post": {
+        "id": "post",
+        "text": "Until the next culvert opens or the next convoy vanishes. That's the roadwarden oath these days.",
+        "options": [
+          { "id": "grim_nod", "text": "A hard oath.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "If the mileway horn sounds twice, get off the road.", "options": [] }
+    }
+  },
+  {
+    "id": "quartermaster_sella",
+    "name": "Quartermaster Sella Dorn",
+    "role": "merchant",
+    "faction": "Convoy Office",
+    "regionId": "warfront_approach",
+    "position": { "x": 188, "y": 462 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A quartermaster counting crates and casualties with the same exhausted precision.",
+    "requiredWorldStateTags": ["route_krondor_secured"],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "New crates, new relay coils, old shortages. That's what an opened road buys you out here. Still, it's better than waiting for the mud to swallow everything.",
+        "options": [
+          { "id": "trade", "text": "Show me what the convoy brought up.", "actions": ["open_shop"], "next": "end" },
+          { "id": "ask_supply", "text": "Will the road hold long enough for supply runs?", "next": "supply" },
+          { "id": "leave", "text": "Keep the line moving.", "next": "end" }
+        ]
+      },
+      "supply": {
+        "id": "supply",
+        "text": "Long enough for one convoy, maybe two. After that? Ask me once you've seen what the Rift has done to the bridge crews east of here.",
+        "options": [
+          { "id": "noted", "text": "Then I'll expect trouble.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Every open road costs someone sleep, coin, or blood.", "options": [] }
+    }
+  },
+  {
+    "id": "veteran_kess",
+    "name": "Veteran Kess Cormack",
+    "role": "story",
+    "faction": "Merchant Company",
+    "regionId": "outer_roads_to_krondor",
+    "position": { "x": 380, "y": 240 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A grizzled veteran-turned-escort for the merchant post, watching the road east with ancient patience.",
+    "conditionalStartNodes": [
+      {
+        "nodeId": "return_success",
+        "activeQuestIds": ["quest_outer_roads_patrol"],
+        "requiredItemIds": ["roadwarden_relay"]
+      }
+    ],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "The dispatches you brought through the culvert changed everything. The road's passable now, and we're running supply caravans again. Not many enemies out here yet, but give it time.",
+        "options": [
+          { "id": "ask_road", "text": "How far does the road reach?", "next": "ask_far" },
+          { "id": "ask_merchants", "text": "What brought the merchants east?", "next": "ask_merchants_why" },
+          { "id": "accept_patrol", "text": "I'll clear the road and bring back proof.", "actions": ["startQuest:quest_outer_roads_patrol"], "next": "end" },
+          { "id": "goodbye", "text": "Stay vigilant out there.", "next": "end" }
+        ]
+      },
+      "ask_far": {
+        "id": "ask_far",
+        "text": "Far enough to smell the coastal air if the wind is right. But between here and there? Plenty of ruins and Rift wounds that didn't heal with your dispatch news.",
+        "options": [
+          { "id": "ready", "text": "I'm ready for the challenge.", "next": "end" }
+        ]
+      },
+      "ask_merchants_why": {
+        "id": "ask_merchants_why",
+        "text": "Profit. The old trade routes are abandoned, and the merchant houses are desperate to find new paths. You opened a door; they're walking through it.",
+        "options": [
+          { "id": "understood", "text": "Then I understand the stakes.", "next": "end" }
+        ]
+      },
+      "return_success": {
+        "id": "return_success",
+        "text": "You came back and the eastern post is standing. The merchant caravans will move through now, and we'll rebuild the trade roads. You've done more than clear a route—you've given a whole region a reason to breathe again.",
+        "options": [
+          { "id": "accept_next", "text": "What comes next for the road?", "next": "next_step" },
+          { "id": "leave", "text": "The road is yours now.", "next": "end" }
+        ]
+      },
+      "next_step": {
+        "id": "next_step",
+        "text": "Healing. Rebuilding. And watching—always watching—to see if the Rift takes back what we just reclaimed.",
+        "options": [
+          { "id": "watched", "text": "It won't go unopposed.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Keep your eyes on the horizon.", "options": [] }
+    }
+  },
+  {
+    "id": "merchant_aldric",
+    "name": "Merchant Aldric Thorne",
+    "role": "merchant",
+    "faction": "Thorne Coast Trading",
+    "regionId": "outer_roads_to_krondor",
+    "position": { "x": 320, "y": 280 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A merchant prince reopening the lost trade routes, measuring profit and peril with keen eyes.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "You're the one who cleared the culvert and brought word of the dispatch recovery. That was bold, fool or hero—the road will tell which. Now the trade flows again.",
+        "options": [
+          { "id": "trade", "text": "Do you have goods to sell?", "actions": ["open_shop"], "next": "end" },
+          { "id": "ask_profit", "text": "Is there profit in these roads?", "next": "ask_profit_reply" },
+          { "id": "goodbye", "text": "Good fortune with your venture.", "next": "end" }
+        ]
+      },
+      "ask_profit_reply": {
+        "id": "ask_profit_reply",
+        "text": "Profit and peril walk together east of the mileway. But yes, there is profit. Enough for a caravan, enough to rebuild what the war broke. The inland cities will pay dearly for goods from the coast.",
+        "options": [
+          { "id": "noted", "text": "Then guard yourself well.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "The road opens for those brave enough to walk it.", "options": [] }
+    }
+  },
+  {
+    "id": "dispatcher_galt",
+    "name": "Dispatcher Galt Herek",
+    "role": "story",
+    "faction": "Dispatch Corps",
+    "regionId": "outer_roads_to_krondor",
+    "position": { "x": 318, "y": 262 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A dispatch officer commanding coordination of supply and communication across the newly secured routes.",
+    "requiredWorldStateTags": ["outer_roads_secured"],
+    "conditionalStartNodes": [
+      {
+        "nodeId": "ritual_complete",
+        "activeQuestIds": ["quest_rift_ritual"],
+        "blockedWorldStateTags": ["rift_ritual_sealed"]
+      }
+    ],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "The relay network is holding. Messages are flowing east again, and the commanders inland know that support can reach them. Your work in the culvert made this possible.",
+        "options": [
+          { "id": "ask_relay", "text": "How secure is the relay network?", "next": "ask_relay_reply" },
+          { "id": "ask_inland", "text": "What word comes from inland?", "next": "ask_inland_reply" },
+          { "id": "accept_rift", "text": "Are there still Rift problems ahead on the road?", "actions": ["startQuest:quest_rift_ritual"], "next": "rift_warn" },
+          { "id": "goodbye", "text": "I trust you'll keep it running.", "next": "end" }
+        ]
+      },
+      "ask_relay_reply": {
+        "id": "ask_relay_reply",
+        "text": "Secure enough for supply runs and communications. We've posted wardens at each station, but the real security is that the road stays open and the merchants keep moving. Rift creatures avoid organized resistance.",
+        "options": [
+          { "id": "understood", "text": "Then I understand what I've started.", "next": "end" }
+        ]
+      },
+      "ask_inland_reply": {
+        "id": "ask_inland_reply",
+        "text": "Commands are consolidating. The inland garrison has new supplies, new ammunition, new hope. They're talking about deeper pushes into Rift-touched territory. Whether that's wisdom or desperation, we'll see.",
+        "options": [
+          { "id": "grim", "text": "Then the real war is just beginning.", "next": "end" }
+        ]
+      },
+      "rift_warn": {
+        "id": "rift_warn",
+        "text": "We have reports of a Rift ritual taking shape at the Inner Nexus, deeper on the road. If that completes, the channeling could tear the relay network apart. Stop it if you can.",
+        "options": [
+          { "id": "go", "text": "I'll find the nexus and end this.", "next": "end" }
+        ]
+      },
+      "ritual_complete": {
+        "id": "ritual_complete",
+        "text": "The channels have gone silent. The relay posts reported a cascade of purple light, then darkness. You must have severed the ritual. The road breathes easier now.",
+        "options": [
+          { "id": "accept_thanks", "text": "The Rift retreated, at least for now.", "actions": ["setWorldState:rift_ritual_sealed", "talk:dispatcher_galt_return"], "next": "new_horizon" },
+          { "id": "leave", "text": "The road is yours again.", "next": "end" }
+        ]
+      },
+      "new_horizon": {
+        "id": "new_horizon",
+        "text": "Three times the road has been opened wider since you arrived: the culvert sealed, the dispatches recovered, and now the ritual ended. The inland territories are watching. The war is changing.",
+        "options": [
+          { "id": "final", "text": "Then let it change.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "The road opens doors. We don't yet know what's waiting on the other side.", "options": [] }
+    }
+  },
+  {
+    "id": "warden_thorne",
+    "name": "Warden Thorne Kess",
+    "role": "story",
+    "faction": "Road Wardens",
+    "regionId": "outer_roads_to_krondor",
+    "position": { "x": 1050, "y": 308 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A seasoned warden commanding the eastern passage checkpoint, watching for Rift encroachment and strange movements.",
+    "requiredWorldStateTags": ["outer_roads_secured"],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "Another warden at the eastern post. We've got clear sight lines now, and the signal tower is lit. The Rift has been quiet since the dispatches came through—almost like it's watching, waiting.",
+        "options": [
+          { "id": "ask_rift", "text": "Why would the Rift grow quiet?", "next": "ask_rift_why" },
+          { "id": "ask_east", "text": "What lies beyond the eastern post?", "next": "ask_east_reply" },
+          { "id": "goodbye", "text": "Keep that signal burning bright.", "next": "end" }
+        ]
+      },
+      "ask_rift_why": {
+        "id": "ask_rift_why",
+        "text": "Creatures respond to power. The dispatch recovery and relay surge—that's power being restored. The Rift understands power, respects it, or fears it. Right now? I think it's reassessing.",
+        "options": [
+          { "id": "grim", "text": "So we have a reprieve, not a victory.", "next": "end" }
+        ]
+      },
+      "ask_east_reply": {
+        "id": "ask_east_reply",
+        "text": "The inland territories. Merchant roads that haven't seen caravans in years. Garrison cities that are running on old stores and older hope. If you go further, you'll see a world that's been holding its breath.",
+        "options": [
+          { "id": "ready", "text": "Then perhaps it's time to exhale.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "The watch endures.", "options": [] }
+    }
+  }
+]

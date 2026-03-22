@@ -1,0 +1,115 @@
+[
+  {
+    "id": "culvert_breach",
+    "name": "Culvert Breach",
+    "description": "A collapsed military drainage culvert beneath the war road, slick with seepage and overtaken by Rift growth.",
+    "entryRegionId": "warfront_approach",
+    "entryPoiId": "culvert_breach",
+    "questId": "quest_culvert_breach",
+    "completionEncounterId": "culvert_overseer",
+    "rewardItemId": "roadwarden_relay",
+    "returnOffset": { "x": -22, "y": 12 },
+    "startPosition": { "x": 14, "y": 0 },
+    "rooms": [
+      {
+        "id": "breach_entry",
+        "kind": "entrance",
+        "position": { "x": 0, "y": 0 },
+        "size": { "width": 28, "height": 22 },
+        "ceilingHeight": 7
+      },
+      {
+        "id": "maintenance_run",
+        "kind": "passage",
+        "position": { "x": 32, "y": 0 },
+        "size": { "width": 22, "height": 18 },
+        "ceilingHeight": 6
+      },
+      {
+        "id": "seep_gallery",
+        "kind": "corrupted",
+        "position": { "x": 68, "y": 6 },
+        "size": { "width": 34, "height": 24 },
+        "ceilingHeight": 7
+      },
+      {
+        "id": "rift_heart",
+        "kind": "final",
+        "position": { "x": 112, "y": 10 },
+        "size": { "width": 30, "height": 28 },
+        "ceilingHeight": 8
+      }
+    ],
+    "corridors": [
+      {
+        "id": "entry_passage",
+        "fromRoomId": "breach_entry",
+        "toRoomId": "maintenance_run",
+        "width": 10
+      },
+      {
+        "id": "maintenance_seep",
+        "fromRoomId": "maintenance_run",
+        "toRoomId": "seep_gallery",
+        "width": 9
+      },
+      {
+        "id": "seep_heart",
+        "fromRoomId": "seep_gallery",
+        "toRoomId": "rift_heart",
+        "width": 10
+      }
+    ],
+    "encounters": [
+      {
+        "id": "breach_scouts",
+        "position": { "x": 26, "y": -2 },
+        "enemyIds": ["war_wretch", "culvert_brood"],
+        "title": "Tunnel Scouts"
+      },
+      {
+        "id": "seep_pack",
+        "position": { "x": 72, "y": 8 },
+        "enemyIds": ["siege_hound", "culvert_brood"],
+        "title": "Seep Pack"
+      },
+      {
+        "id": "culvert_overseer",
+        "position": { "x": 114, "y": 10 },
+        "enemyIds": ["culvert_overseer"],
+        "title": "The Culvert Overseer"
+      }
+    ],
+    "interactables": [
+      {
+        "id": "breach_ladder",
+        "kind": "exit",
+        "label": "Breach Ladder",
+        "position": { "x": 4, "y": 0 },
+        "activation": "interact",
+        "message": "A bent ladder climbs back up into the war road breach."
+      },
+      {
+        "id": "rift_heart_node",
+        "kind": "rift_node",
+        "label": "Rift Heart",
+        "position": { "x": 118, "y": 10 },
+        "activation": "auto",
+        "questVisitId": "culvert_heart",
+        "message": "The culvert walls pulse around a growth node that has fused with the old drainage spine."
+      },
+      {
+        "id": "dispatch_cache",
+        "kind": "cache",
+        "label": "Roadwarden Dispatch Cache",
+        "position": { "x": 122, "y": 5 },
+        "activation": "interact",
+        "questVisitId": "culvert_dispatch_cache",
+        "grantsItemId": "krondor_dispatches",
+        "message": "Behind a collapsed grate, a sealed roadwarden cache survived the breach.",
+        "requiresEncounterId": "culvert_overseer",
+        "oneTime": true
+      }
+    ]
+  }
+]

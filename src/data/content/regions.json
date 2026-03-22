@@ -1,0 +1,228 @@
+[
+  {
+    "id": "crydee",
+    "name": "Crydee Frontier",
+    "description": "A coastal frontier holding fast against raids and Rift rumors, with the safer roads still clustered close to the keep.",
+    "biome": "coast",
+    "dangerLevel": 1,
+    "recommendedLevel": 1,
+    "unlockedByDefault": true,
+    "enemyPool": ["goblin", "bandit", "rift_hound", "corrupted_wolf"],
+    "npcPool": [
+      "beren_thal",
+      "elira_voss",
+      "torvin_hale",
+      "mara_kethryn",
+      "brother_caldus"
+    ],
+    "connectedRegionIds": ["forest_outskirts"],
+    "pointsOfInterest": [
+      { "id": "crydee_keep", "name": "Crydee Keep", "type": "town", "position": { "x": 400, "y": 320 } },
+      { "id": "forest_ruins", "name": "Forest Ruins", "type": "dungeon", "position": { "x": 240, "y": 420 } },
+      { "id": "rift_site", "name": "Rift Site", "type": "rift", "position": { "x": 700, "y": 180 } },
+      { "id": "east_watch_road", "name": "East Watch Road", "type": "road", "position": { "x": 760, "y": 300 } }
+    ],
+    "fastTravelNodes": [
+      { "id": "crydee_keep", "name": "Crydee Keep", "position": { "x": 400, "y": 320 } },
+      { "id": "larat_village", "name": "Larat Village", "position": { "x": 340, "y": 480 } }
+    ],
+    "transitionPoints": [
+      {
+        "poiId": "east_watch_road",
+        "toRegionId": "forest_outskirts",
+        "label": "Eastwood Trail",
+        "description": "The watch road narrows into the ranger trail leading toward the Forest Outskirts."
+      }
+    ],
+    "startPosition": { "x": 440, "y": 320 }
+  },
+  {
+    "id": "forest_outskirts",
+    "name": "Forest Outskirts",
+    "description": "Twisted woodland at the edge of Crydee's protection, where ranger posts and Rift growths compete for the same ground.",
+    "biome": "forest",
+    "dangerLevel": 2,
+    "recommendedLevel": 2,
+    "unlockedByDefault": true,
+    "enemyPool": ["corrupted_wolf", "rift_hound", "forest_spider"],
+    "npcPool": ["lost_scout", "herbalist_myla"],
+    "connectedRegionIds": ["crydee", "warfront_approach"],
+    "pointsOfInterest": [
+      { "id": "ranger_post", "name": "Abandoned Ranger Post", "type": "camp", "position": { "x": 540, "y": 260 } },
+      { "id": "rift_crystal", "name": "Rift Crystal", "type": "rift", "position": { "x": 928, "y": 400 } },
+      { "id": "north_palisade", "name": "North Palisade", "type": "road", "position": { "x": 760, "y": 200 } }
+    ],
+    "fastTravelNodes": [
+      { "id": "forest_outskirts_camp", "name": "Outskirts Camp", "position": { "x": 520, "y": 260 } }
+    ],
+    "transitionPoints": [
+      {
+        "poiId": "ranger_post",
+        "toRegionId": "crydee",
+        "label": "Return to Crydee",
+        "description": "The ranger post trail bends back toward Crydee Frontier."
+      },
+      {
+        "poiId": "north_palisade",
+        "toRegionId": "warfront_approach",
+        "label": "War Road",
+        "description": "Past the shattered palisade, the forest gives way to the war-scarred approach inland."
+      }
+    ],
+    "startPosition": { "x": 96, "y": 360 }
+  },
+  {
+    "id": "warfront_approach",
+    "name": "Warfront Approach",
+    "description": "A churned military road beyond the forest, lined with broken redoubts, dead signal towers, and fresh Rift wounds that point toward a larger world inland.",
+    "biome": "warfront",
+    "dangerLevel": 3,
+    "recommendedLevel": 3,
+    "enemyPool": ["trench_raider", "ashbound_deserter", "siege_hound", "war_wretch"],
+    "npcPool": ["captain_rennic", "scout_tavia", "camp_marshal_iona"],
+    "connectedRegionIds": ["forest_outskirts", "outer_roads_to_krondor"],
+    "pointsOfInterest": [
+      { "id": "muster_camp", "name": "Muster Camp", "type": "camp", "position": { "x": 180, "y": 420 } },
+      { "id": "ashfall_redoubt", "name": "Ashfall Redoubt", "type": "fort", "position": { "x": 300, "y": 210 } },
+      { "id": "broken_signal_tower", "name": "Broken Signal Tower", "type": "fort", "position": { "x": 620, "y": 180 } },
+      { "id": "culvert_breach", "name": "Culvert Breach", "type": "dungeon", "position": { "x": 890, "y": 410 } },
+      { "id": "krondor_milestone", "name": "Krondor Mileway", "type": "road", "position": { "x": 1060, "y": 250 } }
+    ],
+    "fastTravelNodes": [
+      { "id": "muster_camp", "name": "Muster Camp", "position": { "x": 180, "y": 420 } }
+    ],
+    "unlockRequirements": {
+      "requiredQuestIds": ["quest_forest_clear"],
+      "requiredPoiIds": ["rift_crystal"]
+    },
+    "transitionPoints": [
+      {
+        "poiId": "muster_camp",
+        "toRegionId": "forest_outskirts",
+        "label": "Southward Trail",
+        "description": "The battered camp road still leads back through the forest outskirts."
+      }
+    ],
+    "specialEncounters": [
+      {
+        "id": "encounter_culvert_breach",
+        "poiId": "culvert_breach",
+        "dungeonId": "culvert_breach",
+        "title": "Culvert Breach",
+        "description": "Something below the road is nesting inside the torn siege culvert."
+      }
+    ],
+    "spawnPoints": [
+      {
+        "id": "redoubt_line",
+        "position": { "x": 340, "y": 240 },
+        "enemyIds": ["trench_raider", "trench_raider"]
+      },
+      {
+        "id": "supply_ditch",
+        "position": { "x": 590, "y": 300 },
+        "enemyIds": ["ashbound_deserter", "siege_hound"]
+      },
+      {
+        "id": "culvert_edge",
+        "position": { "x": 830, "y": 380 },
+        "enemyIds": ["war_wretch", "war_wretch"]
+      }
+    ],
+    "stateVariants": [
+      {
+        "id": "warfront_secured_route",
+        "requiredWorldStateTags": ["route_krondor_secured"],
+        "additionalNpcIds": ["relay_engineer_ves", "roadwarden_hal", "quartermaster_sella"],
+        "additionalTransitionPoints": [
+          {
+            "poiId": "krondor_milestone",
+            "toRegionId": "outer_roads_to_krondor",
+            "label": "Outer Roads to Krondor",
+            "description": "The relay is lit and the war road east has been secured as far as the Outer Roads to Krondor."
+          }
+        ],
+        "additionalProps": [
+          { "id": "muster_supply_stack", "kind": "supplies", "position": { "x": 210, "y": 430 } },
+          { "id": "muster_signal_cart", "kind": "signal", "position": { "x": 238, "y": 404 } },
+          { "id": "milestone_relay_beacon", "kind": "beacon", "position": { "x": 1042, "y": 258 } },
+          { "id": "milestone_banner", "kind": "banner", "position": { "x": 1082, "y": 236 } },
+          { "id": "culvert_stabilizer", "kind": "brazier", "position": { "x": 874, "y": 392 } }
+        ]
+      }
+    ],
+    "startPosition": { "x": 150, "y": 420 }
+  },
+  {
+    "id": "outer_roads_to_krondor",
+    "name": "Outer Roads to Krondor",
+    "description": "The inland war road beyond the mileway, now secured by dispatch recovery and relay infrastructure. Echoes of war linger across the broken merchant road and crumbling outpost camps.",
+    "biome": "wilderness",
+    "dangerLevel": 4,
+    "recommendedLevel": 4,
+    "playable": true,
+    "enemyPool": ["war_wretch", "siege_hound", "ashbound_deserter", "rift_sapper"],
+    "npcPool": ["veteran_kess", "merchant_aldric"],
+    "connectedRegionIds": ["warfront_approach"],
+    "pointsOfInterest": [
+      { "id": "krondor_merchants", "name": "Krondor Merchant Post", "type": "town", "position": { "x": 320, "y": 280 } },
+      { "id": "broken_caravan", "name": "Caravan Wreckage", "type": "camp", "position": { "x": 680, "y": 360 } },
+      { "id": "inner_rift_shard", "name": "Inner Rift Nexus", "type": "rift", "position": { "x": 900, "y": 180 } },
+      { "id": "eastern_passage", "name": "Eastern Passage", "type": "road", "position": { "x": 1080, "y": 300 } }
+    ],
+    "fastTravelNodes": [
+      { "id": "krondor_merchants", "name": "Merchant Post", "position": { "x": 320, "y": 280 } }
+    ],
+    "transitionPoints": [
+      {
+        "poiId": "krondor_merchants",
+        "toRegionId": "warfront_approach",
+        "label": "Back to Warfront",
+        "description": "The merchant post path winds back to the Warfront Approach."
+      }
+    ],
+    "specialEncounters": [
+      {
+        "id": "encounter_rift_ritual",
+        "poiId": "inner_rift_shard",
+        "enemyId": "rift_harbinger",
+        "title": "Rift Ritual",
+        "description": "A corrupted figure channels Rift energy at the heart of the regional nexus."
+      }
+    ],
+    "spawnPoints": [
+      {
+        "id": "merchant_post_guards",
+        "position": { "x": 340, "y": 200 },
+        "enemyIds": ["siege_hound", "ashbound_deserter"]
+      },
+      {
+        "id": "caravan_scavengers",
+        "position": { "x": 620, "y": 340 },
+        "enemyIds": ["war_wretch", "war_wretch"]
+      },
+      {
+        "id": "rift_corrupted",
+        "position": { "x": 840, "y": 150 },
+        "enemyIds": ["rift_sapper", "siege_hound"]
+      }
+    ],
+    "stateVariants": [
+      {
+        "id": "outer_roads_dispatch_settled",
+        "requiredWorldStateTags": ["outer_roads_secured"],
+        "additionalNpcIds": ["dispatcher_galt", "warden_thorne"],
+        "additionalProps": [
+          { "id": "dispatch_headquarters", "kind": "crate", "position": { "x": 320, "y": 264 } },
+          { "id": "relay_station_post", "kind": "beacon", "position": { "x": 1050, "y": 308 } },
+          { "id": "victory_banner", "kind": "banner", "position": { "x": 360, "y": 260 } }
+        ]
+      }
+    ],
+    "unlockRequirements": {
+      "requiredQuestIds": ["quest_culvert_breach"],
+      "requiredWorldStateTags": ["route_krondor_secured"]
+    },
+    "startPosition": { "x": 100, "y": 280 }
+  }
+]

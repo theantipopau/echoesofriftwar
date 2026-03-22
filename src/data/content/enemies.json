@@ -1,0 +1,207 @@
+[
+  {
+    "id": "goblin",
+    "name": "Goblin",
+    "type": "goblin",
+    "stats": { "maxHealth": 22, "attack": 3, "speed": 60 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "bronze_sword", "chance": 0.05 },
+      { "itemId": "tattered_cloak", "chance": 0.12 }
+    ],
+    "spriteKey": "enemy_goblin"
+  },
+  {
+    "id": "goblin_elite",
+    "name": "Goblin Elite",
+    "type": "goblin",
+    "stats": { "maxHealth": 22, "attack": 3, "speed": 60 },
+    "behavior": "aggro",
+    "isElite": true,
+    "modifiers": ["fast", "elemental"],
+    "lootTable": [
+      { "itemId": "iron_dagger", "chance": 0.15 },
+      { "itemId": "tattered_cloak", "chance": 0.2 }
+    ],
+    "spriteKey": "enemy_goblin"
+  },
+  {
+    "id": "bandit",
+    "name": "Bandit",
+    "type": "bandit",
+    "stats": { "maxHealth": 28, "attack": 5, "speed": 70 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "iron_dagger", "chance": 0.1 },
+      { "itemId": "traveler_rations", "chance": 0.2 }
+    ],
+    "spriteKey": "enemy_bandit"
+  },
+  {
+    "id": "bandit_captain",
+    "name": "Bandit Captain",
+    "type": "bandit",
+    "stats": { "maxHealth": 28, "attack": 5, "speed": 70 },
+    "behavior": "aggro",
+    "isElite": true,
+    "modifiers": ["shielded", "tanky"],
+    "lootTable": [
+      { "itemId": "iron_dagger", "chance": 0.25 },
+      { "itemId": "sturdy_shield", "chance": 0.15 },
+      { "itemId": "ritual_dust", "chance": 0.08 }
+    ],
+    "spriteKey": "enemy_bandit"
+  },
+  {
+    "id": "rift_hound",
+    "name": "Rift Hound",
+    "type": "rift_hound",
+    "stats": { "maxHealth": 34, "attack": 6, "speed": 80 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "ritual_dust", "chance": 0.14 }
+    ],
+    "spriteKey": "enemy_rift_hound"
+  },
+  {
+    "id": "corrupted_wolf",
+    "name": "Corrupted Wolf",
+    "type": "rift_hound",
+    "stats": { "maxHealth": 30, "attack": 5, "speed": 75 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "tattered_cloak", "chance": 0.1 },
+      { "itemId": "ritual_dust", "chance": 0.08 }
+    ],
+    "spriteKey": "enemy_rift_hound"
+  },
+  {
+    "id": "forest_spider",
+    "name": "Forest Spider",
+    "type": "bandit",
+    "stats": { "maxHealth": 38, "attack": 6, "speed": 68 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "tattered_cloak", "chance": 0.12 },
+      { "itemId": "ritual_dust", "chance": 0.05 }
+    ],
+    "spriteKey": "enemy_bandit"
+  },
+  {
+    "id": "rift_guardian",
+    "name": "Rift Guardian",
+    "type": "rift_hound",
+    "stats": { "maxHealth": 68, "attack": 10, "speed": 40 },
+    "behavior": "aggro",
+    "isElite": true,
+    "modifiers": ["tanky", "elemental"],
+    "lootTable": [
+      { "itemId": "ritual_dust", "chance": 0.35 },
+      { "itemId": "tarnished_medallion", "chance": 0.15 }
+    ],
+    "spriteKey": "enemy_rift_hound"
+  },
+  {
+    "id": "trench_raider",
+    "name": "Trench Raider",
+    "type": "raider",
+    "stats": { "maxHealth": 42, "attack": 7, "speed": 72 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "traveler_rations", "chance": 0.2 },
+      { "itemId": "trench_knife", "chance": 0.1 }
+    ],
+    "spriteKey": "enemy_trench_raider"
+  },
+  {
+    "id": "ashbound_deserter",
+    "name": "Ashbound Deserter",
+    "type": "raider",
+    "stats": { "maxHealth": 54, "attack": 9, "speed": 66 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "tattered_cloak", "chance": 0.18 },
+      { "itemId": "iron_dagger", "chance": 0.12 }
+    ],
+    "spriteKey": "enemy_ashbound_deserter"
+  },
+  {
+    "id": "siege_hound",
+    "name": "Siege Hound",
+    "type": "wretch",
+    "stats": { "maxHealth": 46, "attack": 8, "speed": 84 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "ritual_dust", "chance": 0.1 },
+      { "itemId": "traveler_rations", "chance": 0.18 }
+    ],
+    "spriteKey": "enemy_siege_hound"
+  },
+  {
+    "id": "war_wretch",
+    "name": "War Wretch",
+    "type": "wretch",
+    "stats": { "maxHealth": 50, "attack": 8, "speed": 62 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "ritual_dust", "chance": 0.16 },
+      { "itemId": "tattered_cloak", "chance": 0.12 }
+    ],
+    "spriteKey": "enemy_war_wretch"
+  },
+  {
+    "id": "rift_sapper",
+    "name": "Rift Sapper",
+    "type": "wretch",
+    "stats": { "maxHealth": 92, "attack": 12, "speed": 58 },
+    "behavior": "aggro",
+    "isElite": true,
+    "modifiers": ["elemental", "explosive"],
+    "lootTable": [
+      { "itemId": "ritual_dust", "chance": 0.4 },
+      { "itemId": "tarnished_medallion", "chance": 0.2 }
+    ],
+    "spriteKey": "enemy_rift_sapper"
+  },
+  {
+    "id": "culvert_brood",
+    "name": "Culvert Brood",
+    "type": "wretch",
+    "stats": { "maxHealth": 58, "attack": 9, "speed": 74 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "ritual_dust", "chance": 0.18 },
+      { "itemId": "traveler_rations", "chance": 0.15 }
+    ],
+    "spriteKey": "enemy_culvert_brood"
+  },
+  {
+    "id": "culvert_overseer",
+    "name": "Culvert Overseer",
+    "type": "wretch",
+    "stats": { "maxHealth": 124, "attack": 15, "speed": 60 },
+    "behavior": "aggro",
+    "isElite": true,
+    "modifiers": ["tanky", "elemental", "explosive"],
+    "lootTable": [
+      { "itemId": "ritual_dust", "chance": 0.5 },
+      { "itemId": "krondor_dispatches", "chance": 0.15 }
+    ],
+    "spriteKey": "enemy_culvert_overseer"
+  },
+  {
+    "id": "rift_harbinger",
+    "name": "Rift Harbinger",
+    "type": "wretch",
+    "stats": { "maxHealth": 158, "attack": 18, "speed": 65 },
+    "behavior": "aggro",
+    "isElite": true,
+    "modifiers": ["tanky", "elemental", "explosive"],
+    "lootTable": [
+      { "itemId": "ritual_dust", "chance": 0.6 },
+      { "itemId": "tarnished_medallion", "chance": 0.25 },
+      { "itemId": "warden_seal", "chance": 0.1 }
+    ],
+    "spriteKey": "enemy_rift_harbinger"
+  }
+]
