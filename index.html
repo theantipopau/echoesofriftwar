@@ -142,13 +142,6 @@
       </div>
       <canvas id="game"></canvas>
     </div>
-    <script type="module">
-      // Dynamic import prevents the browser from statically fetching ./src/main.ts,
-      // which would fail with a MIME error on branch-mode GitHub Pages.
-      // The redirect script in <head> sends github.io visitors to ./play/ instead.
-      if (!window.location.hostname.endsWith('github.io')) {
-        import('./src/main.ts')
-      }
-    </script>
+    <script type="module" src="./src/main.ts"></script>
   </body>
 </html>
