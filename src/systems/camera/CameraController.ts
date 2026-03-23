@@ -8,7 +8,7 @@ export class CameraController {
   private scene: Scene
   private target: Entity3D | null = null
   private offset: Vector3 = new Vector3(0, 8, -15)
-  private smoothness: number = 0.1
+  private smoothness: number = 0.15  // Slightly snappier response
   private distance: number = 20
   private height: number = 12
   private angle: number = 0

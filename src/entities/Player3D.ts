@@ -56,8 +56,11 @@ export class Player3D extends Entity3D {
     this.mesh.position = position
 
     this.material = new StandardMaterial('playerMaterial', scene)
-    this.material.emissiveColor = new Color3(0.2, 0.5, 1)
-    this.material.specularColor = new Color3(0.5, 0.5, 0.5)
+    // Armor blue with reduced emissive, more metallic feel
+    this.material.diffuseColor = new Color3(0.35, 0.55, 0.75)
+    this.material.emissiveColor = new Color3(0.08, 0.12, 0.18)
+    this.material.specularColor = new Color3(0.6, 0.6, 0.65)
+    this.material.specularPower = 32
     this.mesh.material = this.material
 
     // Setup input listeners
@@ -133,11 +136,11 @@ export class Player3D extends Entity3D {
 
     if (this.hitFlashRemaining > 0) {
       this.hitFlashRemaining -= deltaTime
-      this.material.emissiveColor = Color3.Lerp(new Color3(0.2, 0.5, 1), Color3.White(), 0.75)
+      this.material.emissiveColor = Color3.Lerp(new Color3(0.08, 0.12, 0.18), new Color3(0.95, 0.2, 0.2), 0.7)
     } else if (this.dodgeInvulnerabilityRemaining > 0) {
-      this.material.emissiveColor = Color3.Lerp(new Color3(0.2, 0.5, 1), new Color3(0.72, 0.96, 1), 0.55)
+      this.material.emissiveColor = Color3.Lerp(new Color3(0.08, 0.12, 0.18), new Color3(0.4, 0.8, 1), 0.6)
     } else {
-      this.material.emissiveColor = new Color3(0.2, 0.5, 1)
+      this.material.emissiveColor = new Color3(0.08, 0.12, 0.18)
     }
 
     if (this.attackWindupRemaining > 0) {

@@ -161,10 +161,10 @@ export default class WorldManager {
     ground.position.y = 0
 
     const groundMaterial = new StandardMaterial('groundMaterial', this.scene)
-    groundMaterial.emissiveColor = this.getBiomeColor(region.biome)
-    const terrainTexture = new Texture(assetPath('art/rift-noise.svg'), this.scene)
-    terrainTexture.uScale = 45
-    terrainTexture.vScale = 45
+    groundMaterial.emissiveColor = new Color3(0.6, 0.56, 0.48)  // More neutral ground tone
+    const terrainTexture = new Texture(assetPath('groundlayer-circle.png'), this.scene)
+    terrainTexture.uScale = 8
+    terrainTexture.vScale = 8
     groundMaterial.diffuseTexture = terrainTexture
     groundMaterial.diffuseTexture.hasAlpha = false
     groundMaterial.specularColor = new Color3(0.15, 0.15, 0.15)

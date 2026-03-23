@@ -64,8 +64,10 @@ export class Enemy3D extends Entity3D {
 
     this.baseColor = this.getEnemyColor(data.type)
     this.material = new StandardMaterial(`enemyMaterial_${data.id}`, scene)
-    this.material.emissiveColor = this.baseColor.clone()
-    this.material.specularColor = new Color3(0.3, 0.3, 0.3)
+    this.material.diffuseColor = this.baseColor.clone()
+    this.material.emissiveColor = this.baseColor.scale(0.15)
+    this.material.specularColor = new Color3(0.4, 0.4, 0.4)
+    this.material.specularPower = 28
     this.mesh.material = this.material
 
     this.healthBarRoot = new TransformNode(`enemyHealth_${data.id}`, scene)
