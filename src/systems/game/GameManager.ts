@@ -1,8 +1,10 @@
 import { Engine } from '@babylonjs/core/Engines/engine'
 import { Scene } from '@babylonjs/core/scene'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
-import { CubeTexture } from '@babylonjs/core/Materials/Textures/cubeTexture'
 import { ColorCurves } from '@babylonjs/core/Materials/colorCurves'
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
+import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
+import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight'
 import { PointLight } from '@babylonjs/core/Lights/pointLight'
 import WorldManager from '../world/WorldManager'
@@ -110,20 +112,20 @@ export default class GameManager {
   private setupScene(): void {
     // Lighting
     const ambientLight = new HemisphericLight('ambientLight', new Vector3(0.5, 1, 0.5), this.scene)
-    ambientLight.intensity = 0.45   // IBL from env texture supplements this
+    ambientLight.intensity = 0.8
 
     const directionalLight = new PointLight('directionalLight', new Vector3(10, 20, 10), this.scene)
     directionalLight.intensity = 0.6
     directionalLight.range = 100
 
-    // HDR environment + skybox from BabylonJS Assets CDN (CC-BY-4.0)
-    // environmentSpecular.env provides both IBL ambient lighting and the skybox texture
-    const envTex = CubeTexture.CreateFromPrefilteredData(
-      'https://assets.babylonjs.com/environments/environmentSpecular.env',
-      this.scene
-    )
-    this.scene.createDefaultSkybox(envTex, true, 2000, 0.3, true)
-    this.scene.environmentIntensity = 0.6
+    // Procedural gradient skybox (rift atmosphere: dark blue-purple with hints of gold)
+    const skybox = CreateBox('skybox', { size: 5000 }, this.scene)
+    const skyboxMaterial = new StandardMaterial('skyboxMaterial', this.scene)
+    // Gradient: deep rift blue at edges, warmer purple-gold at the "horizon"
+    skyboxMaterial.emissiveColor = new Color3(0.12, 0.16, 0.28)  // Base: deep blue
+    skyboxMaterial.backFaceCulling = false
+    skyboxMaterial.disableLighting = true
+    skybox.material = skyboxMaterial
 
     // Color grading — cool, desaturated rift atmosphere (no external LUT file needed)
     const imgProc = this.scene.imageProcessingConfiguration
