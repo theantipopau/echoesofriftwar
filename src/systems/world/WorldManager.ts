@@ -196,6 +196,7 @@ export default class WorldManager {
     groundMaterial.specularPower = 12
     groundMaterial.checkReadyOnlyOnce = false
     ground.material = groundMaterial
+    ground.receiveShadows = true
 
     const positions = ground.getVerticesData(VertexBuffer.PositionKind)
     const indices = ground.getIndices()
@@ -983,6 +984,88 @@ export default class WorldManager {
     }
 
     this.createVegetationScatter(region)
+    this.propNodes.forEach((node) => this.markNodeAsShadowReceiver(node))
+  }
+
+  private markNodeAsShadowReceiver(node: Node): void {
+    if (node instanceof TransformNode) {
+      node.getChildMeshes().forEach((mesh) => {
+        mesh.receiveShadows = true
+      })
+      return
+    }
+
+    const maybeMesh = node as Mesh
+    if (typeof maybeMesh.receiveShadows === 'boolean') {
+      maybeMesh.receiveShadows = true
+    }
+  }
+
+  public getShadowCasterMeshes(maxCount: number = 70): AbstractMesh[] {
+    const unique = new Map<string, AbstractMesh>()
+
+    const addMeshes = (meshes: AbstractMesh[]) => {
+      meshes.forEach((mesh) => {
+        if (!mesh || mesh.isDisposed()) {
+          return
+        }
+        unique.set(mesh.uniqueId.toString(), mesh)
+      })
+    }
+
+    const player = this.player
+    if (player) {
+      addMeshes(player.getShadowMeshes())
+    }
+
+    const priorityNpcIds = new Set([
+      'captain_rennic',
+      'scout_tavia',
+      'camp_marshal_iona',
+      'beren_thal',
+      'torvin_hale',
+      'larat_merchant',
+      'crydee_guard',
+    ])
+
+    const npcEntries = Array.from(this.npcs.entries())
+      .sort(([leftId], [rightId]) => {
+        const leftPriority = priorityNpcIds.has(leftId) ? 0 : 1
+        const rightPriority = priorityNpcIds.has(rightId) ? 0 : 1
+        if (leftPriority !== rightPriority) {
+          return leftPriority - rightPriority
+        }
+        return leftId.localeCompare(rightId)
+      })
+
+    npcEntries.forEach(([, npc]) => addMeshes(npc.getShadowMeshes()))
+
+    const importantEnemyIds = new Set([
+      'trench_raider',
+      'ashbound_deserter',
+      'siege_hound',
+      'war_wretch',
+    ])
+
+    const enemyEntries = Array.from(this.enemies.values())
+      .sort((left, right) => {
+        const leftImportant = importantEnemyIds.has(left.getData().id) ? 0 : 1
+        const rightImportant = importantEnemyIds.has(right.getData().id) ? 0 : 1
+        if (leftImportant !== rightImportant) {
+          return leftImportant - rightImportant
+        }
+
+        if (!player) {
+          return 0
+        }
+
+        const leftDistance = Vector3.Distance(player.getPosition(), left.getPosition())
+        const rightDistance = Vector3.Distance(player.getPosition(), right.getPosition())
+        return leftDistance - rightDistance
+      })
+
+    enemyEntries.forEach((enemy) => addMeshes(enemy.getShadowMeshes()))
+    return Array.from(unique.values()).slice(0, maxCount)
   }
 
   private createVegetationScatter(region: RegionData): void {

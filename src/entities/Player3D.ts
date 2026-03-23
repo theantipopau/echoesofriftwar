@@ -1,7 +1,6 @@
 import type { Scene } from '@babylonjs/core/scene'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import { Color3 } from '@babylonjs/core/Maths/math.color'
-import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh'
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
@@ -11,7 +10,8 @@ import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder'
 import { Entity3D } from './Entity3D'
 import { EquipmentSlot, ItemData } from '../data/types'
 import { PLAYER_SETTINGS } from '../config/gameBalance'
-import { assetPath } from '../utils/assetPaths'
+import { PLAYER_MODEL_SPEC } from '../systems/visual/characterModelMappings'
+import { createCharacterModelInstance } from '../systems/visual/characterModelRegistry'
 
 export interface PlayerSnapshot {
   level: number
@@ -114,39 +114,20 @@ export class Player3D extends Entity3D {
   }
 
   private async tryLoadDetailedModel(): Promise<void> {
-    try {
-      const result = await SceneLoader.ImportMeshAsync('', assetPath('models/outfits/'), 'Male_Ranger.gltf', this.scene)
-      const modelRoot = new TransformNode('player_model_root', this.scene)
-      const importedMeshes = result.meshes.filter((mesh) => mesh.name !== '__root__')
-
-      if (importedMeshes.length === 0) {
-        modelRoot.dispose()
-        return
-      }
-
-      importedMeshes.forEach((mesh) => {
-        mesh.parent = modelRoot
-        mesh.isPickable = false
-      })
-
-      modelRoot.scaling = new Vector3(0.95, 0.95, 0.95)
-      modelRoot.position = this.mesh.position.add(new Vector3(0, -1.1, 0))
-      this.modelRoot = modelRoot
-
-      // Keep collision/movement mesh but hide the blocky fallback when real model is ready.
-      this.mesh.visibility = 0.02
-    } catch (error) {
-      console.warn('Player model load failed, using fallback mesh.', error)
+    const modelRoot = await createCharacterModelInstance(this.scene, PLAYER_MODEL_SPEC, 'player_model_root')
+    if (!modelRoot) {
+      return
     }
+
+    modelRoot.parent = this.mesh
+    this.modelRoot = modelRoot
+    this.mesh.visibility = 0.02
   }
 
   private syncModelRoot(): void {
     if (!this.modelRoot) {
       return
     }
-
-    this.modelRoot.position.copyFrom(this.mesh.position)
-    this.modelRoot.position.y -= 1.1
 
     const dir = this.dodgeDirection
     if (dir.lengthSquared() > 0.0001) {
@@ -243,10 +224,19 @@ export class Player3D extends Entity3D {
   }
 
   public override destroy(): void {
-    this.modelRoot?.getChildMeshes().forEach((mesh: AbstractMesh) => mesh.dispose())
     this.modelRoot?.dispose()
     this.modelRoot = null
     super.destroy()
+  }
+
+  public getShadowMeshes(): AbstractMesh[] {
+    if (this.modelRoot) {
+      const meshes = this.modelRoot.getChildMeshes()
+      if (meshes.length > 0) {
+        return meshes
+      }
+    }
+    return [this.mesh]
   }
 
   public takeDamage(amount: number): number {

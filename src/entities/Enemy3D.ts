@@ -2,6 +2,7 @@ import type { Scene } from '@babylonjs/core/scene'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
+import type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh'
 import { Mesh } from '@babylonjs/core/Meshes/mesh'
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
@@ -11,6 +12,9 @@ import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder'
 import { Entity3D } from './Entity3D'
 import { EnemyData } from '../data/types'
 import { ENEMY_SETTINGS } from '../config/gameBalance'
+import { ENEMY_MODEL_BY_ID, ENEMY_MODEL_BY_TYPE } from '../systems/visual/characterModelMappings'
+import type { CharacterModelSpec } from '../systems/visual/characterModelRegistry'
+import { createCharacterModelInstance } from '../systems/visual/characterModelRegistry'
 
 interface EnemyBehaviorProfile {
   speedMultiplier: number
@@ -44,6 +48,7 @@ export class Enemy3D extends Entity3D {
   private staggerRemaining = 0
   private readonly healthBarRoot: TransformNode
   private readonly healthBarFill: Mesh
+  private modelRoot: TransformNode | null = null
 
   constructor(scene: Scene, data: EnemyData, position: Vector3) {
     super(scene, `enemy_${data.id}`, position)
@@ -72,6 +77,7 @@ export class Enemy3D extends Entity3D {
     this.material.specularColor = new Color3(0.4, 0.4, 0.4)
     this.material.specularPower = 28
     this.createEnemyVisual(scene)
+    void this.tryLoadDetailedModel()
 
     this.healthBarRoot = new TransformNode(`enemyHealth_${data.id}`, scene)
     this.healthBarRoot.parent = this.mesh
@@ -93,6 +99,30 @@ export class Enemy3D extends Entity3D {
     fillMaterial.emissiveColor = new Color3(0.88, 0.24, 0.2)
     fillMaterial.disableLighting = true
     this.healthBarFill.material = fillMaterial
+  }
+
+  private resolveModelSpec(): CharacterModelSpec | null {
+    return ENEMY_MODEL_BY_ID[this.data.id] ?? ENEMY_MODEL_BY_TYPE[this.data.type] ?? null
+  }
+
+  private async tryLoadDetailedModel(): Promise<void> {
+    const modelSpec = this.resolveModelSpec()
+    if (!modelSpec) {
+      return
+    }
+
+    const modelRoot = await createCharacterModelInstance(this.scene, modelSpec, `enemy_model_${this.data.id}`)
+    if (!modelRoot) {
+      return
+    }
+
+    modelRoot.parent = this.mesh
+    this.modelRoot = modelRoot
+
+    // Keep a small emissive combat core for telegraph readability at distance.
+    this.mesh.scaling = new Vector3(0.45, 0.45, 0.45)
+    this.mesh.visibility = 0.14
+    this.healthBarRoot.position.y = 2.2
   }
 
   private createEnemyVisual(scene: Scene): void {
@@ -385,5 +415,21 @@ export class Enemy3D extends Entity3D {
 
   public getData(): EnemyData {
     return this.data
+  }
+
+  public getShadowMeshes(): AbstractMesh[] {
+    if (this.modelRoot) {
+      const meshes = this.modelRoot.getChildMeshes()
+      if (meshes.length > 0) {
+        return meshes
+      }
+    }
+    return [this.mesh]
+  }
+
+  public override destroy(): void {
+    this.modelRoot?.dispose()
+    this.modelRoot = null
+    super.destroy()
   }
 }

@@ -2,14 +2,19 @@ import type { Scene } from '@babylonjs/core/scene'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
-import { CreateCapsule } from '@babylonjs/core/Meshes/Builders/capsuleBuilder'
+import type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh'
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
+import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
 import { Entity3D } from './Entity3D'
 import { NpcData } from '../data/types'
+import { NPC_MODEL_BY_ID } from '../systems/visual/characterModelMappings'
+import { createCharacterModelInstance } from '../systems/visual/characterModelRegistry'
 
 export class NPC3D extends Entity3D {
   private data: NpcData
   private isInConversation: boolean = false
   private dialogueIndex: number = 0
+  private modelRoot: TransformNode | null = null
 
   constructor(scene: Scene, data: NpcData, position: Vector3) {
     super(scene, `npc_${data.id}`, position)
@@ -18,9 +23,10 @@ export class NPC3D extends Entity3D {
 
     // Customize NPC mesh
     this.mesh.dispose()
-    this.mesh = CreateCapsule(`npc_${data.id}`, {
-      height: 1.9,
-      radius: 0.35
+    this.mesh = CreateBox(`npc_${data.id}`, {
+      width: 0.82,
+      depth: 0.48,
+      height: 1.18,
     }, scene)
     this.mesh.position = position
 
@@ -31,6 +37,24 @@ export class NPC3D extends Entity3D {
 
     // Velocity is zero for NPCs (stationary)
     this.velocity = Vector3.Zero()
+
+    void this.tryLoadDetailedModel()
+  }
+
+  private async tryLoadDetailedModel(): Promise<void> {
+    const modelSpec = NPC_MODEL_BY_ID[this.data.id]
+    if (!modelSpec) {
+      return
+    }
+
+    const modelRoot = await createCharacterModelInstance(this.scene, modelSpec, `npc_model_${this.data.id}`)
+    if (!modelRoot) {
+      return
+    }
+
+    modelRoot.parent = this.mesh
+    this.modelRoot = modelRoot
+    this.mesh.visibility = 0.02
   }
 
   private getRoleColor(role: string): Color3 {
@@ -86,5 +110,21 @@ export class NPC3D extends Entity3D {
 
   public getDialogueTree(): Record<string, any> {
     return this.data.dialogueTree
+  }
+
+  public getShadowMeshes(): AbstractMesh[] {
+    if (this.modelRoot) {
+      const meshes = this.modelRoot.getChildMeshes()
+      if (meshes.length > 0) {
+        return meshes
+      }
+    }
+    return [this.mesh]
+  }
+
+  public override destroy(): void {
+    this.modelRoot?.dispose()
+    this.modelRoot = null
+    super.destroy()
   }
 }

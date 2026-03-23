@@ -5,8 +5,10 @@ import { ColorCurves } from '@babylonjs/core/Materials/colorCurves'
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
 import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight'
-import { PointLight } from '@babylonjs/core/Lights/pointLight'
+import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight'
+import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator'
 import { SkyMaterial } from '@babylonjs/materials/sky'
+import type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh'
 import WorldManager from '../world/WorldManager'
 import ItemManager from '../content/ItemManager'
 import NPCManager from '../content/NPCManager'
@@ -38,6 +40,8 @@ export default class GameManager {
   private questJournal: QuestJournal
   private regionProgression: RegionProgression
   private saveSystem: SaveSystem
+  private shadowGenerator: ShadowGenerator | null = null
+  private lastShadowCasterRefreshMs = 0
   private lastAutosaveTimestamp = Date.now()
   private readonly autosaveIntervalMs = 60000
 
@@ -112,11 +116,17 @@ export default class GameManager {
   private setupScene(): void {
     // Lighting
     const ambientLight = new HemisphericLight('ambientLight', new Vector3(0.5, 1, 0.5), this.scene)
-    ambientLight.intensity = 0.8
+    ambientLight.intensity = 0.56
 
-    const directionalLight = new PointLight('directionalLight', new Vector3(10, 20, 10), this.scene)
-    directionalLight.intensity = 0.6
-    directionalLight.range = 100
+    const sunLight = new DirectionalLight('sunLight', new Vector3(-0.45, -1, -0.15), this.scene)
+    sunLight.position = new Vector3(420, 650, 280)
+    sunLight.intensity = 1.28
+
+    this.shadowGenerator = new ShadowGenerator(1024, sunLight)
+    this.shadowGenerator.usePoissonSampling = true
+    this.shadowGenerator.bias = 0.0008
+    this.shadowGenerator.normalBias = 0.02
+    this.shadowGenerator.darkness = 0.35
 
     // High quality procedural sky and atmospheric fog
     const skybox = CreateBox('skybox', { size: 5000 }, this.scene)
@@ -181,6 +191,7 @@ export default class GameManager {
   public update(): void {
     // Game logic updates
     this.worldManager.update()
+    this.refreshShadowCasters()
 
     if (Date.now() - this.lastAutosaveTimestamp >= this.autosaveIntervalMs) {
       this.saveGame('auto')
@@ -239,6 +250,29 @@ export default class GameManager {
 
   public getUIManager(): UIManager {
     return this.uiManager
+  }
+
+  private refreshShadowCasters(): void {
+    if (!this.shadowGenerator) {
+      return
+    }
+
+    const now = performance.now()
+    if (now - this.lastShadowCasterRefreshMs < 1000) {
+      return
+    }
+    this.lastShadowCasterRefreshMs = now
+
+    const shadowMeshes: AbstractMesh[] = this.worldManager.getShadowCasterMeshes(70)
+    const shadowMap = this.shadowGenerator.getShadowMap()
+    if (!shadowMap) {
+      return
+    }
+
+    shadowMap.renderList = []
+    shadowMeshes.forEach((mesh) => {
+      this.shadowGenerator?.addShadowCaster(mesh, true)
+    })
   }
 
   private async travelToRegion(regionId: string): Promise<boolean> {
