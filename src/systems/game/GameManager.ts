@@ -2,11 +2,11 @@ import { Engine } from '@babylonjs/core/Engines/engine'
 import { Scene } from '@babylonjs/core/scene'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import { ColorCurves } from '@babylonjs/core/Materials/colorCurves'
-import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
 import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight'
 import { PointLight } from '@babylonjs/core/Lights/pointLight'
+import { SkyMaterial } from '@babylonjs/materials/sky'
 import WorldManager from '../world/WorldManager'
 import ItemManager from '../content/ItemManager'
 import NPCManager from '../content/NPCManager'
@@ -118,14 +118,22 @@ export default class GameManager {
     directionalLight.intensity = 0.6
     directionalLight.range = 100
 
-    // Procedural gradient skybox (rift atmosphere: dark blue-purple with hints of gold)
+    // High quality procedural sky and atmospheric fog
     const skybox = CreateBox('skybox', { size: 5000 }, this.scene)
-    const skyboxMaterial = new StandardMaterial('skyboxMaterial', this.scene)
-    // Gradient: deep rift blue at edges, warmer purple-gold at the "horizon"
-    skyboxMaterial.emissiveColor = new Color3(0.12, 0.16, 0.28)  // Base: deep blue
+    const skyboxMaterial = new SkyMaterial('skyboxMaterial', this.scene)
     skyboxMaterial.backFaceCulling = false
-    skyboxMaterial.disableLighting = true
+    skyboxMaterial.luminance = 0.7
+    skyboxMaterial.turbidity = 9
+    skyboxMaterial.rayleigh = 2.1
+    skyboxMaterial.mieCoefficient = 0.006
+    skyboxMaterial.mieDirectionalG = 0.93
+    skyboxMaterial.inclination = 0.46
+    skyboxMaterial.azimuth = 0.27
     skybox.material = skyboxMaterial
+
+    this.scene.fogMode = Scene.FOGMODE_EXP2
+    this.scene.fogDensity = 0.00075
+    this.scene.fogColor = new Color3(0.12, 0.15, 0.22)
 
     // Color grading — cool, desaturated rift atmosphere (no external LUT file needed)
     const imgProc = this.scene.imageProcessingConfiguration

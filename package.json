@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "@babylonjs/core": "^6.37.0",
-    "@babylonjs/loaders": "^6.49.0"
+    "@babylonjs/loaders": "^6.49.0",
+    "@babylonjs/materials": "^6.49.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

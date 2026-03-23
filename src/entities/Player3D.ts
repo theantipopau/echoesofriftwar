@@ -1,13 +1,17 @@
 import type { Scene } from '@babylonjs/core/scene'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import { Color3 } from '@babylonjs/core/Maths/math.color'
+import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
+import type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh'
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
 import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder'
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder'
 import { Entity3D } from './Entity3D'
 import { EquipmentSlot, ItemData } from '../data/types'
 import { PLAYER_SETTINGS } from '../config/gameBalance'
+import { assetPath } from '../utils/assetPaths'
 
 export interface PlayerSnapshot {
   level: number
@@ -45,6 +49,7 @@ export class Player3D extends Entity3D {
   private readonly material: StandardMaterial
   private staggerRemaining = 0
   private hitFlashRemaining = 0
+  private modelRoot: TransformNode | null = null
 
   constructor(scene: Scene, position: Vector3) {
     super(scene, 'player', position)
@@ -65,6 +70,7 @@ export class Player3D extends Entity3D {
     this.material.specularColor = new Color3(0.6, 0.6, 0.65)
     this.material.specularPower = 32
     this.createPlayerVisual(scene)
+    void this.tryLoadDetailedModel()
 
     // Setup input listeners
     this.setupInput()
@@ -105,6 +111,47 @@ export class Player3D extends Entity3D {
     shoulder.position.y = 0.58
     shoulder.rotation.z = Math.PI / 2
     shoulder.material = this.material
+  }
+
+  private async tryLoadDetailedModel(): Promise<void> {
+    try {
+      const result = await SceneLoader.ImportMeshAsync('', assetPath('models/outfits/'), 'Male_Ranger.gltf', this.scene)
+      const modelRoot = new TransformNode('player_model_root', this.scene)
+      const importedMeshes = result.meshes.filter((mesh) => mesh.name !== '__root__')
+
+      if (importedMeshes.length === 0) {
+        modelRoot.dispose()
+        return
+      }
+
+      importedMeshes.forEach((mesh) => {
+        mesh.parent = modelRoot
+        mesh.isPickable = false
+      })
+
+      modelRoot.scaling = new Vector3(0.95, 0.95, 0.95)
+      modelRoot.position = this.mesh.position.add(new Vector3(0, -1.1, 0))
+      this.modelRoot = modelRoot
+
+      // Keep collision/movement mesh but hide the blocky fallback when real model is ready.
+      this.mesh.visibility = 0.02
+    } catch (error) {
+      console.warn('Player model load failed, using fallback mesh.', error)
+    }
+  }
+
+  private syncModelRoot(): void {
+    if (!this.modelRoot) {
+      return
+    }
+
+    this.modelRoot.position.copyFrom(this.mesh.position)
+    this.modelRoot.position.y -= 1.1
+
+    const dir = this.dodgeDirection
+    if (dir.lengthSquared() > 0.0001) {
+      this.modelRoot.rotation.y = Math.atan2(dir.x, dir.z)
+    }
   }
 
   private setupInput(): void {
@@ -192,6 +239,14 @@ export class Player3D extends Entity3D {
 
     // Mana regeneration
     this.mana = Math.min(this.maxMana, this.mana + PLAYER_SETTINGS.manaRegenPerSecond * deltaTime)
+    this.syncModelRoot()
+  }
+
+  public override destroy(): void {
+    this.modelRoot?.getChildMeshes().forEach((mesh: AbstractMesh) => mesh.dispose())
+    this.modelRoot?.dispose()
+    this.modelRoot = null
+    super.destroy()
   }
 
   public takeDamage(amount: number): number {

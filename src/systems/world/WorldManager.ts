@@ -161,12 +161,20 @@ export default class WorldManager {
     ground.position.y = 0
 
     const groundMaterial = new StandardMaterial('groundMaterial', this.scene)
-    groundMaterial.emissiveColor = this.getBiomeColor(region.biome).scale(0.55)
+    groundMaterial.emissiveColor = this.getBiomeColor(region.biome).scale(0.45)
+
+    const baseTexture = new Texture(assetPath('textures/rocktrim_base.png'), this.scene)
+    baseTexture.uScale = 18
+    baseTexture.vScale = 18
+    baseTexture.anisotropicFilteringLevel = 8
+    groundMaterial.diffuseTexture = baseTexture
+
     const terrainTexture = new Texture(assetPath('textures/grass.png'), this.scene)
-    terrainTexture.uScale = 30
-    terrainTexture.vScale = 30
+    terrainTexture.uScale = 38
+    terrainTexture.vScale = 38
     terrainTexture.anisotropicFilteringLevel = 8
-    groundMaterial.diffuseTexture = terrainTexture
+    groundMaterial.ambientTexture = terrainTexture
+    groundMaterial.ambientColor = new Color3(0.44, 0.48, 0.42)
 
     const detailTexture = new Texture(assetPath('groundlayer-circle.png'), this.scene)
     detailTexture.uScale = 11
@@ -179,6 +187,9 @@ export default class WorldManager {
     normalTexture.uScale = 26
     normalTexture.vScale = 26
     groundMaterial.bumpTexture = normalTexture
+    groundMaterial.useParallax = true
+    groundMaterial.useParallaxOcclusion = true
+    groundMaterial.parallaxScaleBias = 0.02
     groundMaterial.invertNormalMapX = true
     groundMaterial.invertNormalMapY = true
     groundMaterial.specularColor = new Color3(0.06, 0.06, 0.06)
@@ -982,7 +993,9 @@ export default class WorldManager {
     const bushTexture = new Texture(assetPath('vegetation/bush.png'), this.scene)
     const treePairTexture = new Texture(assetPath('vegetation/twotrees.png'), this.scene)
     const treeLogTexture = new Texture(assetPath('vegetation/treesandlog.png'), this.scene)
-    ;[bushTexture, treePairTexture, treeLogTexture].forEach((texture) => {
+    const rockTextureA = new Texture(assetPath('vegetation/rock1.png'), this.scene)
+    const rockTextureB = new Texture(assetPath('vegetation/rock2.png'), this.scene)
+    ;[bushTexture, treePairTexture, treeLogTexture, rockTextureA, rockTextureB].forEach((texture) => {
       texture.hasAlpha = true
       texture.anisotropicFilteringLevel = 8
     })
@@ -1010,6 +1023,20 @@ export default class WorldManager {
     treeLogMaterial.backFaceCulling = false
     treeLogMaterial.specularColor = Color3.Black()
     treeLogMaterial.emissiveColor = new Color3(0.18, 0.22, 0.14)
+
+    const rockDecalMaterialA = new StandardMaterial(`veg_rockdecal_a_${region.id}`, this.scene)
+    rockDecalMaterialA.diffuseTexture = rockTextureA
+    rockDecalMaterialA.opacityTexture = rockTextureA
+    rockDecalMaterialA.useAlphaFromDiffuseTexture = true
+    rockDecalMaterialA.backFaceCulling = false
+    rockDecalMaterialA.specularColor = Color3.Black()
+
+    const rockDecalMaterialB = new StandardMaterial(`veg_rockdecal_b_${region.id}`, this.scene)
+    rockDecalMaterialB.diffuseTexture = rockTextureB
+    rockDecalMaterialB.opacityTexture = rockTextureB
+    rockDecalMaterialB.useAlphaFromDiffuseTexture = true
+    rockDecalMaterialB.backFaceCulling = false
+    rockDecalMaterialB.specularColor = Color3.Black()
 
     const spawnCountByBiome: Record<string, number> = {
       forest: 220,
@@ -1057,6 +1084,30 @@ export default class WorldManager {
       }
 
       this.propNodes.push(plane)
+    }
+
+    const clutterCountByBiome: Record<string, number> = {
+      forest: 520,
+      wilderness: 410,
+      coast: 280,
+      ruins: 240,
+      warfront: 140,
+    }
+
+    const clutterCount = clutterCountByBiome[region.biome] ?? 220
+    for (let index = 0; index < clutterCount; index++) {
+      const x = worldMargin + (((index * 91) % span) + Math.sin(index * 0.43) * 32)
+      const z = worldMargin + (((index * 173) % span) + Math.cos(index * 0.37) * 32)
+      const y = this.sampleTerrainHeight(x, z, region.biome, region.id)
+      const decal = CreatePlane(`veg_decal_${region.id}_${index}`, { width: 1.4, height: 1.4 }, this.scene)
+      decal.position = new Vector3(x, y + 0.03, z)
+      decal.rotation.x = Math.PI / 2
+      decal.rotation.z = (index % 9) * 0.35
+      const scale = 0.7 + ((index % 7) * 0.13)
+      decal.scaling = new Vector3(scale, scale, 1)
+      decal.isPickable = false
+      decal.material = index % 2 === 0 ? rockDecalMaterialA : rockDecalMaterialB
+      this.propNodes.push(decal)
     }
   }
 
