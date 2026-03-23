@@ -2,7 +2,9 @@ import type { Scene } from '@babylonjs/core/scene'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
-import { CreateCapsule } from '@babylonjs/core/Meshes/Builders/capsuleBuilder'
+import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
+import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder'
+import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder'
 import { Entity3D } from './Entity3D'
 import { EquipmentSlot, ItemData } from '../data/types'
 import { PLAYER_SETTINGS } from '../config/gameBalance'
@@ -49,9 +51,10 @@ export class Player3D extends Entity3D {
 
     // Customize player mesh
     this.mesh.dispose()
-    this.mesh = CreateCapsule('player', {
-      height: 2,
-      radius: 0.4
+    this.mesh = CreateBox('player', {
+      width: 0.9,
+      depth: 0.55,
+      height: 1.35,
     }, scene)
     this.mesh.position = position
 
@@ -61,10 +64,47 @@ export class Player3D extends Entity3D {
     this.material.emissiveColor = new Color3(0.08, 0.12, 0.18)
     this.material.specularColor = new Color3(0.6, 0.6, 0.65)
     this.material.specularPower = 32
-    this.mesh.material = this.material
+    this.createPlayerVisual(scene)
 
     // Setup input listeners
     this.setupInput()
+  }
+
+  private createPlayerVisual(scene: Scene): void {
+    this.mesh.material = this.material
+
+    const head = CreateSphere('player_head', { diameter: 0.52, segments: 8 }, scene)
+    head.parent = this.mesh
+    head.position.y = 0.95
+    head.material = this.material
+
+    const leftArm = CreateBox('player_arm_l', { width: 0.22, depth: 0.22, height: 0.9 }, scene)
+    leftArm.parent = this.mesh
+    leftArm.position = new Vector3(-0.55, 0.22, 0)
+    leftArm.rotation.z = 0.08
+    leftArm.material = this.material
+
+    const rightArm = CreateBox('player_arm_r', { width: 0.22, depth: 0.22, height: 0.9 }, scene)
+    rightArm.parent = this.mesh
+    rightArm.position = new Vector3(0.55, 0.22, 0)
+    rightArm.rotation.z = -0.08
+    rightArm.material = this.material
+
+    const leftLeg = CreateBox('player_leg_l', { width: 0.24, depth: 0.24, height: 0.95 }, scene)
+    leftLeg.parent = this.mesh
+    leftLeg.position = new Vector3(-0.2, -1.08, 0)
+    leftLeg.material = this.material
+
+    const rightLeg = CreateBox('player_leg_r', { width: 0.24, depth: 0.24, height: 0.95 }, scene)
+    rightLeg.parent = this.mesh
+    rightLeg.position = new Vector3(0.2, -1.08, 0)
+    rightLeg.material = this.material
+
+    const shoulder = CreateCylinder('player_shoulder', { diameter: 0.9, height: 0.22, tessellation: 8 }, scene)
+    shoulder.parent = this.mesh
+    shoulder.position.y = 0.58
+    shoulder.rotation.z = Math.PI / 2
+    shoulder.material = this.material
   }
 
   private setupInput(): void {

@@ -161,14 +161,28 @@ export default class WorldManager {
     ground.position.y = 0
 
     const groundMaterial = new StandardMaterial('groundMaterial', this.scene)
-    groundMaterial.emissiveColor = new Color3(0.6, 0.56, 0.48)  // More neutral ground tone
-    const terrainTexture = new Texture(assetPath('groundlayer-circle.png'), this.scene)
-    terrainTexture.uScale = 8
-    terrainTexture.vScale = 8
+    groundMaterial.emissiveColor = this.getBiomeColor(region.biome).scale(0.55)
+    const terrainTexture = new Texture(assetPath('textures/grass.png'), this.scene)
+    terrainTexture.uScale = 30
+    terrainTexture.vScale = 30
+    terrainTexture.anisotropicFilteringLevel = 8
     groundMaterial.diffuseTexture = terrainTexture
-    groundMaterial.diffuseTexture.hasAlpha = false
-    groundMaterial.specularColor = new Color3(0.15, 0.15, 0.15)
-    groundMaterial.specularPower = 24
+
+    const detailTexture = new Texture(assetPath('groundlayer-circle.png'), this.scene)
+    detailTexture.uScale = 11
+    detailTexture.vScale = 11
+    detailTexture.anisotropicFilteringLevel = 8
+    groundMaterial.emissiveTexture = detailTexture
+    groundMaterial.emissiveTexture.level = 0.28
+
+    const normalTexture = new Texture(assetPath('textures/rocktrim_normal.png'), this.scene)
+    normalTexture.uScale = 26
+    normalTexture.vScale = 26
+    groundMaterial.bumpTexture = normalTexture
+    groundMaterial.invertNormalMapX = true
+    groundMaterial.invertNormalMapY = true
+    groundMaterial.specularColor = new Color3(0.06, 0.06, 0.06)
+    groundMaterial.specularPower = 12
     groundMaterial.checkReadyOnlyOnce = false
     ground.material = groundMaterial
 
@@ -955,6 +969,94 @@ export default class WorldManager {
       } else {
         this.createRock(region, x, z)
       }
+    }
+
+    this.createVegetationScatter(region)
+  }
+
+  private createVegetationScatter(region: RegionData): void {
+    if (region.biome === 'city') {
+      return
+    }
+
+    const bushTexture = new Texture(assetPath('vegetation/bush.png'), this.scene)
+    const treePairTexture = new Texture(assetPath('vegetation/twotrees.png'), this.scene)
+    const treeLogTexture = new Texture(assetPath('vegetation/treesandlog.png'), this.scene)
+    ;[bushTexture, treePairTexture, treeLogTexture].forEach((texture) => {
+      texture.hasAlpha = true
+      texture.anisotropicFilteringLevel = 8
+    })
+
+    const bushMaterial = new StandardMaterial(`veg_bush_mat_${region.id}`, this.scene)
+    bushMaterial.diffuseTexture = bushTexture
+    bushMaterial.opacityTexture = bushTexture
+    bushMaterial.useAlphaFromDiffuseTexture = true
+    bushMaterial.backFaceCulling = false
+    bushMaterial.specularColor = Color3.Black()
+    bushMaterial.emissiveColor = new Color3(0.17, 0.24, 0.16)
+
+    const treePairMaterial = new StandardMaterial(`veg_treepair_mat_${region.id}`, this.scene)
+    treePairMaterial.diffuseTexture = treePairTexture
+    treePairMaterial.opacityTexture = treePairTexture
+    treePairMaterial.useAlphaFromDiffuseTexture = true
+    treePairMaterial.backFaceCulling = false
+    treePairMaterial.specularColor = Color3.Black()
+    treePairMaterial.emissiveColor = new Color3(0.15, 0.2, 0.13)
+
+    const treeLogMaterial = new StandardMaterial(`veg_treelog_mat_${region.id}`, this.scene)
+    treeLogMaterial.diffuseTexture = treeLogTexture
+    treeLogMaterial.opacityTexture = treeLogTexture
+    treeLogMaterial.useAlphaFromDiffuseTexture = true
+    treeLogMaterial.backFaceCulling = false
+    treeLogMaterial.specularColor = Color3.Black()
+    treeLogMaterial.emissiveColor = new Color3(0.18, 0.22, 0.14)
+
+    const spawnCountByBiome: Record<string, number> = {
+      forest: 220,
+      wilderness: 170,
+      coast: 120,
+      ruins: 100,
+      warfront: 55,
+    }
+
+    const spawnCount = spawnCountByBiome[region.biome] ?? 120
+    const worldMargin = 90
+    const span = this.config.worldSize - worldMargin * 2
+
+    for (let index = 0; index < spawnCount; index++) {
+      const x = worldMargin + (((index * 137) % span) + Math.sin(index * 0.61) * 24)
+      const z = worldMargin + (((index * 223) % span) + Math.cos(index * 0.49) * 24)
+
+      const nearPoi = region.pointsOfInterest.some((poi) => {
+        const dx = poi.position.x - x
+        const dz = poi.position.y - z
+        return (dx * dx) + (dz * dz) < 900
+      })
+      if (nearPoi) {
+        continue
+      }
+
+      const y = this.sampleTerrainHeight(x, z, region.biome, region.id)
+      const pick = index % 10
+      const plane = CreatePlane(`veg_${region.id}_${index}`, { width: 2.8, height: 2.2 }, this.scene)
+      plane.position = new Vector3(x, y + 1.05, z)
+      plane.billboardMode = 2 // BILLBOARDMODE_Y
+      plane.isPickable = false
+
+      if (pick < 5) {
+        plane.scaling = new Vector3(1.2 + (pick * 0.12), 1.05 + (pick * 0.08), 1)
+        plane.material = bushMaterial
+      } else if (pick < 8) {
+        plane.scaling = new Vector3(1.8 + (pick * 0.1), 1.6 + (pick * 0.12), 1)
+        plane.position.y += 0.6
+        plane.material = treePairMaterial
+      } else {
+        plane.scaling = new Vector3(2 + (pick * 0.12), 1.9 + (pick * 0.14), 1)
+        plane.position.y += 0.65
+        plane.material = treeLogMaterial
+      }
+
+      this.propNodes.push(plane)
     }
   }
 

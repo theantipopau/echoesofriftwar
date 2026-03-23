@@ -4,8 +4,10 @@ import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { Mesh } from '@babylonjs/core/Meshes/mesh'
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
-import { CreateCapsule } from '@babylonjs/core/Meshes/Builders/capsuleBuilder'
+import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
+import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder'
 import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder'
+import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder'
 import { Entity3D } from './Entity3D'
 import { EnemyData } from '../data/types'
 import { ENEMY_SETTINGS } from '../config/gameBalance'
@@ -56,9 +58,10 @@ export class Enemy3D extends Entity3D {
 
     // Customize enemy mesh
     this.mesh.dispose()
-    this.mesh = CreateCapsule(`enemy_${data.id}`, {
-      height: 1.8,
-      radius: 0.4
+    this.mesh = CreateBox(`enemy_${data.id}`, {
+      width: 0.85,
+      depth: 0.5,
+      height: 1.2,
     }, scene)
     this.mesh.position = position
 
@@ -68,7 +71,7 @@ export class Enemy3D extends Entity3D {
     this.material.emissiveColor = this.baseColor.scale(0.15)
     this.material.specularColor = new Color3(0.4, 0.4, 0.4)
     this.material.specularPower = 28
-    this.mesh.material = this.material
+    this.createEnemyVisual(scene)
 
     this.healthBarRoot = new TransformNode(`enemyHealth_${data.id}`, scene)
     this.healthBarRoot.parent = this.mesh
@@ -90,6 +93,41 @@ export class Enemy3D extends Entity3D {
     fillMaterial.emissiveColor = new Color3(0.88, 0.24, 0.2)
     fillMaterial.disableLighting = true
     this.healthBarFill.material = fillMaterial
+  }
+
+  private createEnemyVisual(scene: Scene): void {
+    this.mesh.material = this.material
+
+    const head = CreateSphere(`enemy_head_${this.data.id}`, { diameter: 0.5, segments: 8 }, scene)
+    head.parent = this.mesh
+    head.position.y = 0.88
+    head.material = this.material
+
+    const leftArm = CreateBox(`enemy_arm_l_${this.data.id}`, { width: 0.2, depth: 0.2, height: 0.85 }, scene)
+    leftArm.parent = this.mesh
+    leftArm.position = new Vector3(-0.5, 0.15, 0)
+    leftArm.material = this.material
+
+    const rightArm = CreateBox(`enemy_arm_r_${this.data.id}`, { width: 0.2, depth: 0.2, height: 0.85 }, scene)
+    rightArm.parent = this.mesh
+    rightArm.position = new Vector3(0.5, 0.15, 0)
+    rightArm.material = this.material
+
+    const leftLeg = CreateBox(`enemy_leg_l_${this.data.id}`, { width: 0.22, depth: 0.22, height: 0.9 }, scene)
+    leftLeg.parent = this.mesh
+    leftLeg.position = new Vector3(-0.18, -1, 0)
+    leftLeg.material = this.material
+
+    const rightLeg = CreateBox(`enemy_leg_r_${this.data.id}`, { width: 0.22, depth: 0.22, height: 0.9 }, scene)
+    rightLeg.parent = this.mesh
+    rightLeg.position = new Vector3(0.18, -1, 0)
+    rightLeg.material = this.material
+
+    const shoulder = CreateCylinder(`enemy_shoulder_${this.data.id}`, { diameter: 0.82, height: 0.2, tessellation: 8 }, scene)
+    shoulder.parent = this.mesh
+    shoulder.position.y = 0.52
+    shoulder.rotation.z = Math.PI / 2
+    shoulder.material = this.material
   }
 
   private getEnemyColor(type: string): Color3 {
