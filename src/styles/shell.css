@@ -1,0 +1,125 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(180, 132, 56, 0.16), transparent 38%),
+    radial-gradient(circle at 80% 18%, rgba(94, 56, 158, 0.14), transparent 34%),
+    linear-gradient(180deg, #120e0a, #090d17 62%, #06080e);
+  color: #eadfc8;
+}
+
+#app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.loading-screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(180deg, rgba(11, 9, 7, 0.82), rgba(6, 8, 14, 0.94)),
+    url('/art/rift-noise.svg');
+  background-size: cover, 240px 240px;
+  z-index: 10;
+}
+
+.loading-screen.hidden {
+  display: none;
+}
+
+.loading-card {
+  width: min(760px, calc(100vw - 40px));
+  padding: 30px;
+  border-radius: 4px;
+  border: 1px solid rgba(181, 145, 74, 0.34);
+  border-top-color: rgba(240, 205, 106, 0.5);
+  background:
+    linear-gradient(160deg, rgba(23, 16, 10, 0.98), rgba(8, 12, 21, 0.98)),
+    url('/art/rift-lines.svg');
+  background-size: cover, 320px 320px;
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 220, 120, 0.1);
+  color: #eadfc8;
+  text-align: center;
+}
+
+.loading-badge {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(181, 145, 74, 0.42);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+.loading-header {
+  width: min(560px, 100%);
+  margin: 18px auto 14px;
+  display: block;
+}
+
+.loading-copy {
+  margin: 0 auto;
+  max-width: 560px;
+  color: #b8aa8c;
+  line-height: 1.7;
+}
+
+.loading-bar {
+  width: min(440px, 100%);
+  height: 12px;
+  margin: 24px auto 10px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(181, 145, 74, 0.18);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+.loading-bar__fill {
+  width: 38%;
+  height: 100%;
+  background: linear-gradient(90deg, #7a201c, #d36d2f 48%, #e2bf61 100%);
+  box-shadow: 0 0 14px rgba(227, 171, 77, 0.22);
+  animation: loading-pulse 1.6s ease-in-out infinite;
+}
+
+.loading-status {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #d9bb6f;
+}
+
+@keyframes loading-pulse {
+  0% { transform: translateX(-42%); }
+  50% { transform: translateX(102%); }
+  100% { transform: translateX(-42%); }
+}
+
+@media (max-width: 720px) {
+  .loading-card {
+    padding: 24px 18px;
+  }
+
+  .loading-copy {
+    font-size: 14px;
+  }
+}

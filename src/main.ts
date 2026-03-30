@@ -1,5 +1,7 @@
 import { Engine } from '@babylonjs/core/Engines/engine'
 import '@babylonjs/loaders/glTF'
+import '@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent'
+import './styles/shell.css'
 import GameManager from './systems/game/GameManager'
 
 const loadingScreen = document.getElementById('loading-screen') as HTMLDivElement | null
