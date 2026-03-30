@@ -5,132 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Echoes of the Riftwar — Prototype</title>
     <link rel="icon" type="image/png" href="./squarelogo.PNG" />
-    <script>
-      (function redirectSourceModePages() {
-        const isGitHubPages = window.location.hostname.endsWith('github.io')
-        const inFallbackBuild = /\/play\/?$/.test(window.location.pathname)
-
-        if (isGitHubPages && !inFallbackBuild) {
-          window.location.replace(new URL('./play/', window.location.href).toString())
-        }
-      })()
-    </script>
     <style>
-      html, body {
+      html, body, #app {
         height: 100%;
         margin: 0;
-        overflow: hidden;
-        background:
-          radial-gradient(circle at 18% 12%, rgba(109, 175, 255, 0.18), transparent 45%),
-          radial-gradient(circle at 82% 20%, rgba(242, 182, 97, 0.16), transparent 38%),
-          linear-gradient(180deg, #0a1320, #070d17);
-        background-image:
-          radial-gradient(circle at 18% 12%, rgba(109, 175, 255, 0.18), transparent 45%),
-          radial-gradient(circle at 82% 20%, rgba(242, 182, 97, 0.16), transparent 38%),
-          linear-gradient(180deg, #0a1320, #070d17),
-          url('./art/rift-lines.svg');
-        background-size: auto, auto, auto, 420px 420px;
-        font-family: Georgia, 'Segoe UI', serif;
-      }
-
-      #app {
-        position: relative;
-        width: 100%;
-        height: 100%;
-      }
-
-      .loading-screen {
-        position: absolute;
-        inset: 0;
-        display: grid;
-        place-items: center;
-        background:
-          linear-gradient(180deg, rgba(7, 12, 20, 0.86), rgba(4, 8, 14, 0.92)),
-          url('./art/rift-noise.svg');
-        background-size: cover, 240px 240px;
-        z-index: 10;
-      }
-
-      .loading-screen.hidden {
-        display: none;
-      }
-
-      .loading-card {
-        width: min(720px, calc(100vw - 48px));
-        padding: 28px;
-        border-radius: 28px;
-        border: 1px solid rgba(171, 201, 255, 0.2);
-        background:
-          linear-gradient(180deg, rgba(16, 28, 46, 0.92), rgba(7, 13, 23, 0.94)),
-          url('./art/rift-lines.svg');
-        background-size: cover, 320px 320px;
-        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
-        color: #edf4ff;
-        text-align: center;
-      }
-
-      .loading-badge {
-        width: 72px;
-        height: 72px;
-        object-fit: cover;
-        border-radius: 18px;
-        box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
-      }
-
-      .loading-header {
-        width: min(560px, 100%);
-        margin: 18px auto 12px;
-        display: block;
-      }
-
-      .loading-copy {
-        margin: 0 auto;
-        max-width: 560px;
-        color: #aebfd8;
-        line-height: 1.6;
-      }
-
-      .loading-bar {
-        width: min(420px, 100%);
-        height: 12px;
-        margin: 22px auto 10px;
-        border-radius: 999px;
-        overflow: hidden;
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.08);
-      }
-
-      .loading-bar__fill {
-        width: 40%;
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, #68b0ff, #f2be62, #8ae0bd);
-        animation: loading-pulse 1.4s ease-in-out infinite;
-      }
-
-      .loading-status {
-        font-size: 13px;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #f2be62;
-      }
-
-      @keyframes loading-pulse {
-        0% { transform: translateX(-40%); }
-        50% { transform: translateX(90%); }
-        100% { transform: translateX(-40%); }
-      }
-
-      #game {
-        display: block;
-        width: 100%;
-        height: 100%;
-        touch-action: none;
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-2b021349.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/babylon-core-a3fa788c.js">
-    <link rel="modulepreload" crossorigin href="./assets/ui-panels-b5589830.js">
+    <script type="module" crossorigin src="./assets/index-243e4c0b.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/babylon-core-e6213b06.js">
+    <link rel="modulepreload" crossorigin href="./assets/ui-panels-3b4215f9.js">
+    <link rel="stylesheet" href="./assets/index-f23221c7.css">
   </head>
   <body>
     <div id="app">
