@@ -35,6 +35,29 @@ import { RegionProgression } from '../game/RegionProgression'
 import DungeonManager from './DungeonManager'
 import type { DungeonData, DungeonInteractableData } from '../../data/types'
 import { assetPath } from '../../utils/assetPaths'
+import { getRegionEnvironment, type EnvironmentPropSpec, type RegionEnvironmentConfig } from './RegionEnvironments'
+import { placeBuilding, preloadBuildingModels, createVegetationMarker } from './EnvironmentBuilder'
+import {
+  createCampfireEffect,
+  createRiftCorruptionEffect,
+  createRiftGroundSigil,
+  createWarScorchField,
+  type RiftParticleHandle,
+} from '../visual/RiftParticleEffects'
+
+const PROP_MODEL_MAP: Partial<Record<EnvironmentPropSpec['type'], string>> = {
+  crate: 'Prop_Crate.gltf',
+  wagon: 'Prop_Wagon.gltf',
+  fence: 'Prop_WoodenFence_Single.gltf',
+  fallen_log: 'Roof_Log.gltf',
+}
+
+const PROP_MODEL_SCALE: Partial<Record<EnvironmentPropSpec['type'], number>> = {
+  crate: 0.9,
+  wagon: 1.1,
+  fence: 1.25,
+  fallen_log: 1.6,
+}
 
 interface WorldDependencies {
   enemyManager: EnemyManager
@@ -60,6 +83,8 @@ export default class WorldManager {
   private lootDrops: LootDrop3D[] = []
   private propNodes: Node[] = []
   private poiMarkers: AbstractMesh[] = []
+  private environmentNodes: Node[] = []
+  private environmentEffects: RiftParticleHandle[] = []
   private deltaTime: number = 0
   private lastFrameTime: number = performance.now()
   private interactionCooldown = 0
@@ -98,6 +123,8 @@ export default class WorldManager {
     this.createTerrain(region)
     this.createPoiMarkers(region)
     this.createRegionProps(region)
+    this.spawnRegionAmbientEffects(region)
+    void this.loadRegionEnvironment(region)
 
     const startPos = startOverride ?? region.startPosition ?? { x: 0, y: 0 }
     const playerPosition = new Vector3(
@@ -130,11 +157,15 @@ export default class WorldManager {
     this.lootDrops.forEach((drop) => drop.destroy())
     this.propNodes.forEach((node) => node.dispose())
     this.poiMarkers.forEach((marker) => marker.dispose())
+    this.environmentNodes.forEach((node) => node.dispose())
+    this.environmentEffects.forEach((effect) => effect.dispose())
     this.enemies.clear()
     this.npcs.clear()
     this.lootDrops = []
     this.propNodes = []
     this.poiMarkers = []
+    this.environmentNodes = []
+    this.environmentEffects = []
     this.specialEncounterEnemies.clear()
     this.dungeonEncounterAssignments.clear()
     this.dungeonEncounterCounts.clear()
@@ -513,6 +544,7 @@ export default class WorldManager {
         name: this.currentDialogueNpc.getName(),
         text: node.text,
         options: (node.options ?? []).map((option: DialogueOption) => ({ id: option.id, text: option.text })),
+        portraitKey: this.currentDialogueNpc.getData().portraitKey,
       },
       (optionId) => this.handleDialogueChoice(optionId),
       () => this.closeDialogue(),
@@ -1836,5 +1868,267 @@ export default class WorldManager {
 
   public getCameraController(): CameraController {
     return this.camera
+  }
+
+  private async loadRegionEnvironment(region: RegionData): Promise<void> {
+    const envConfig = getRegionEnvironment(region.id)
+    if (!envConfig) {
+      return
+    }
+
+    // Preload building models
+    const buildingFiles = [...new Set(envConfig.buildings.map((b) => b.model))]
+    const propModelFiles = [...new Set(
+      envConfig.props
+        .map((prop) => PROP_MODEL_MAP[prop.type])
+        .filter((file): file is string => Boolean(file)),
+    )]
+    await preloadBuildingModels(this.scene, [...buildingFiles, ...propModelFiles])
+
+    // Place buildings
+    for (const building of envConfig.buildings) {
+      const instance = await placeBuilding(
+        this.scene,
+        {
+          model: building.model,
+          position: new Vector3(
+            building.x,
+            this.sampleTerrainHeight(building.x, building.z, region.biome, region.id),
+            building.z,
+          ),
+          rotation: building.rotation ? new Vector3(0, building.rotation, 0) : undefined,
+          scale: building.scale,
+        },
+        building.id,
+      )
+
+      if (instance) {
+        this.environmentNodes.push(instance)
+      }
+    }
+
+    // Create props from config
+    for (const prop of envConfig.props) {
+      const propPosition = new Vector3(
+        prop.x,
+        this.sampleTerrainHeight(prop.x, prop.z, region.biome, region.id),
+        prop.z,
+      )
+
+      const propModel = PROP_MODEL_MAP[prop.type]
+      if (propModel) {
+        const modelNode = await placeBuilding(
+          this.scene,
+          {
+            model: propModel,
+            position: propPosition,
+            rotation: prop.rotation ? new Vector3(0, prop.rotation, 0) : undefined,
+            scale: prop.scale ?? PROP_MODEL_SCALE[prop.type] ?? 1,
+          },
+          `prop_${prop.id}`,
+        )
+
+        if (modelNode) {
+          this.environmentNodes.push(modelNode)
+          continue
+        }
+      }
+
+      // Props are created using simple geometric placeholders for now
+      // In the future, these would load from models
+      let propNode: TransformNode | null = null
+      let emitFireEffect = false
+      let fireHeight = 1.2
+
+      if (prop.type === 'crate') {
+        propNode = new TransformNode(`prop_${prop.id}`, this.scene)
+        const mesh = CreateBox(`crate_${prop.id}`, { width: 1, depth: 1, height: 1 }, this.scene)
+        mesh.parent = propNode
+        const mat = new StandardMaterial(`prop_mat_${prop.id}`, this.scene)
+        mat.emissiveColor = new Color3(0.65, 0.52, 0.36)
+        mesh.material = mat
+      } else if (prop.type === 'barrel') {
+        propNode = new TransformNode(`prop_${prop.id}`, this.scene)
+        const mesh = CreateCylinder(`barrel_${prop.id}`, { height: 1.4, diameter: 0.8 }, this.scene)
+        mesh.parent = propNode
+        const mat = new StandardMaterial(`prop_mat_${prop.id}`, this.scene)
+        mat.emissiveColor = new Color3(0.5, 0.3, 0.2)
+        mesh.material = mat
+      } else if (prop.type === 'wagon') {
+        propNode = new TransformNode(`prop_${prop.id}`, this.scene)
+
+        const body = CreateBox(`wagon_body_${prop.id}`, { width: 2.8, depth: 1.6, height: 0.7 }, this.scene)
+        body.parent = propNode
+        body.position.y = 0.9
+        const bodyMat = new StandardMaterial(`wagon_body_mat_${prop.id}`, this.scene)
+        bodyMat.diffuseColor = new Color3(0.36, 0.24, 0.14)
+        bodyMat.emissiveColor = new Color3(0.18, 0.11, 0.05)
+        body.material = bodyMat
+
+        const canopy = CreateBox(`wagon_canopy_${prop.id}`, { width: 2.4, depth: 1.2, height: 0.18 }, this.scene)
+        canopy.parent = propNode
+        canopy.position.y = 1.7
+        const canopyMat = new StandardMaterial(`wagon_canopy_mat_${prop.id}`, this.scene)
+        canopyMat.diffuseColor = new Color3(0.46, 0.42, 0.34)
+        canopyMat.emissiveColor = new Color3(0.12, 0.1, 0.08)
+        canopy.material = canopyMat
+
+        ;[
+          new Vector3(-1.05, 0.45, -0.85),
+          new Vector3(-1.05, 0.45, 0.85),
+          new Vector3(1.05, 0.45, -0.85),
+          new Vector3(1.05, 0.45, 0.85),
+        ].forEach((offset, index) => {
+          const wheel = CreateCylinder(`wagon_wheel_${prop.id}_${index}`, { height: 0.18, diameter: 0.95, tessellation: 16 }, this.scene)
+          wheel.parent = propNode
+          wheel.position = offset
+          wheel.rotation.z = Math.PI / 2
+          const wheelMat = new StandardMaterial(`wagon_wheel_mat_${prop.id}_${index}`, this.scene)
+          wheelMat.diffuseColor = new Color3(0.2, 0.14, 0.08)
+          wheelMat.emissiveColor = new Color3(0.08, 0.06, 0.03)
+          wheel.material = wheelMat
+        })
+      } else if (prop.type === 'torch' || prop.type === 'brazier') {
+        propNode = new TransformNode(`prop_${prop.id}`, this.scene)
+        const pole = CreateCylinder(`torch_pole_${prop.id}`, { height: 1.8, diameter: 0.12 }, this.scene)
+        pole.parent = propNode
+        pole.position.y = 0.9
+        const poleMat = new StandardMaterial(`torch_pole_mat_${prop.id}`, this.scene)
+        poleMat.diffuseColor = new Color3(0.22, 0.15, 0.08)
+        poleMat.emissiveColor = new Color3(0.08, 0.05, 0.02)
+        pole.material = poleMat
+
+        const flame = CreatePolyhedron(`flame_${prop.id}`, { type: 0, size: 0.45 }, this.scene)
+        flame.parent = propNode
+        flame.position.y = 1.8
+        const flameMat = new StandardMaterial(`prop_mat_${prop.id}`, this.scene)
+        flameMat.emissiveColor = new Color3(1, 0.55, 0.12)
+        flame.material = flameMat
+        emitFireEffect = true
+        fireHeight = prop.id.includes('fire') || prop.id.includes('camp') || prop.id.includes('brazier') ? 0.2 : 1.8
+      } else if (prop.type === 'fence') {
+        propNode = new TransformNode(`prop_${prop.id}`, this.scene)
+        for (let i = 0; i < 3; i++) {
+          const plank = CreateBox(`fence_${prop.id}_${i}`, { width: 2, depth: 0.2, height: 1 }, this.scene)
+          plank.parent = propNode
+          plank.position = new Vector3(0, i * 0.4, 0)
+          const mat = new StandardMaterial(`fence_mat_${prop.id}_${i}`, this.scene)
+          mat.emissiveColor = new Color3(0.4, 0.3, 0.2)
+          plank.material = mat
+        }
+      } else if (prop.type === 'bench') {
+        propNode = new TransformNode(`prop_${prop.id}`, this.scene)
+        const seat = CreateBox(`bench_seat_${prop.id}`, { width: 1.8, depth: 0.5, height: 0.12 }, this.scene)
+        seat.parent = propNode
+        seat.position.y = 0.65
+        const back = CreateBox(`bench_back_${prop.id}`, { width: 1.8, depth: 0.12, height: 0.8 }, this.scene)
+        back.parent = propNode
+        back.position = new Vector3(0, 1.0, -0.2)
+        const benchMat = new StandardMaterial(`bench_mat_${prop.id}`, this.scene)
+        benchMat.diffuseColor = new Color3(0.42, 0.3, 0.18)
+        benchMat.emissiveColor = new Color3(0.14, 0.08, 0.03)
+        seat.material = benchMat
+        back.material = benchMat
+        ;[-0.7, 0.7].forEach((xOffset, index) => {
+          const leg = CreateBox(`bench_leg_${prop.id}_${index}`, { width: 0.14, depth: 0.14, height: 0.7 }, this.scene)
+          leg.parent = propNode
+          leg.position = new Vector3(xOffset, 0.35, 0)
+          leg.material = benchMat
+        })
+      } else if (prop.type === 'sign') {
+        propNode = new TransformNode(`prop_${prop.id}`, this.scene)
+        const post = CreateCylinder(`sign_post_${prop.id}`, { height: 1.9, diameter: 0.14 }, this.scene)
+        post.parent = propNode
+        post.position.y = 0.95
+        const plaque = CreateBox(`sign_plaque_${prop.id}`, { width: 1.1, height: 0.6, depth: 0.12 }, this.scene)
+        plaque.parent = propNode
+        plaque.position.y = 1.45
+        const postMat = new StandardMaterial(`sign_mat_${prop.id}`, this.scene)
+        postMat.diffuseColor = new Color3(0.4, 0.26, 0.12)
+        postMat.emissiveColor = new Color3(0.12, 0.08, 0.03)
+        post.material = postMat
+        plaque.material = postMat
+      } else if (prop.type === 'corpse') {
+        propNode = new TransformNode(`prop_${prop.id}`, this.scene)
+        const body = CreateBox(`corpse_${prop.id}`, { width: 0.9, depth: 2.1, height: 0.28 }, this.scene)
+        body.parent = propNode
+        body.position.y = 0.14
+        body.rotation.z = 0.15
+        const bodyMat = new StandardMaterial(`corpse_mat_${prop.id}`, this.scene)
+        bodyMat.diffuseColor = new Color3(0.32, 0.16, 0.16)
+        bodyMat.emissiveColor = new Color3(0.08, 0.02, 0.02)
+        body.material = bodyMat
+      } else if (prop.type === 'fallen_log') {
+        propNode = new TransformNode(`prop_${prop.id}`, this.scene)
+        const log = CreateCylinder(`fallen_log_${prop.id}`, { height: 2.6, diameterTop: 0.45, diameterBottom: 0.6, tessellation: 10 }, this.scene)
+        log.parent = propNode
+        log.rotation.z = Math.PI / 2
+        log.rotation.x = 0.18
+        log.position.y = 0.35
+        const logMat = new StandardMaterial(`fallen_log_mat_${prop.id}`, this.scene)
+        logMat.diffuseColor = new Color3(0.28, 0.2, 0.1)
+        logMat.emissiveColor = new Color3(0.08, 0.05, 0.02)
+        log.material = logMat
+      } else {
+        // Generic prop
+        propNode = new TransformNode(`prop_${prop.id}`, this.scene)
+      }
+
+      if (propNode) {
+        propNode.position = propPosition
+        if (prop.rotation) {
+          propNode.rotation.y = prop.rotation
+        }
+        if (prop.scale) {
+          propNode.scaling = new Vector3(prop.scale, prop.scale, prop.scale)
+        }
+        this.environmentNodes.push(propNode)
+
+        if (emitFireEffect) {
+          this.environmentEffects.push(
+            createCampfireEffect(this.scene, propPosition.add(new Vector3(0, fireHeight, 0))),
+          )
+        }
+      }
+    }
+
+    // Create vegetation from config
+    for (const veg of envConfig.vegetation) {
+      const vegNode = createVegetationMarker(this.scene, new Vector3(veg.x, this.sampleTerrainHeight(veg.x, veg.z, region.biome, region.id), veg.z), veg.type)
+      this.environmentNodes.push(vegNode)
+    }
+
+    console.log(`🏘️ Loaded environment for ${region.name} (${envConfig.buildings.length} buildings, ${envConfig.props.length} props)`)
+  }
+
+  private spawnRegionAmbientEffects(region: RegionData): void {
+    const envConfig = getRegionEnvironment(region.id)
+
+    const hasNearbyFireProp = (x: number, z: number): boolean => (
+      envConfig?.props.some((prop) => (
+        prop.type === 'torch'
+        && Vector3.DistanceSquared(new Vector3(prop.x, 0, prop.z), new Vector3(x, 0, z)) <= 55 * 55
+      )) ?? false
+    )
+
+    for (const poi of region.pointsOfInterest) {
+      const groundY = this.sampleTerrainHeight(poi.position.x, poi.position.y, region.biome, region.id)
+      const position = new Vector3(poi.position.x, groundY, poi.position.y)
+
+      if (poi.type === 'rift') {
+        const radius = 8 + region.dangerLevel * 1.4
+        this.environmentEffects.push(createRiftCorruptionEffect(this.scene, position, radius))
+        this.environmentEffects.push(createRiftGroundSigil(this.scene, position, radius * 1.25))
+        continue
+      }
+
+      if (poi.type === 'camp' && !hasNearbyFireProp(poi.position.x, poi.position.y)) {
+        this.environmentEffects.push(createCampfireEffect(this.scene, position.add(new Vector3(0, 0.2, 0))))
+      }
+
+      if (region.biome === 'warfront' && (poi.type === 'fort' || poi.type === 'camp' || poi.type === 'road')) {
+        this.environmentEffects.push(createWarScorchField(this.scene, position, 24, 7))
+      }
+    }
   }
 }

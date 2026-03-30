@@ -9,6 +9,9 @@ import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight'
 import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator'
 import { SkyMaterial } from '@babylonjs/materials/sky'
 import type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh'
+import { applyRegionAtmosphere, getRegionAtmosphere } from '../visual/RegionAtmosphere'
+import { createWarAshEffect, createDustEffect, type RiftParticleHandle } from '../visual/RiftParticleEffects'
+import { RegionalSoundscape } from '../visual/RegionalSoundscape'
 import WorldManager from '../world/WorldManager'
 import ItemManager from '../content/ItemManager'
 import NPCManager from '../content/NPCManager'
@@ -41,6 +44,11 @@ export default class GameManager {
   private regionProgression: RegionProgression
   private saveSystem: SaveSystem
   private shadowGenerator: ShadowGenerator | null = null
+  private sunLight: DirectionalLight | null = null
+  private ambientLight: HemisphericLight | null = null
+  private skyMaterial: SkyMaterial | null = null
+  private ambientEffects: RiftParticleHandle[] = []
+  private regionalSoundscape: RegionalSoundscape
   private lastShadowCasterRefreshMs = 0
   private lastAutosaveTimestamp = Date.now()
   private readonly autosaveIntervalMs = 60000
@@ -72,6 +80,7 @@ export default class GameManager {
     this.questJournal = new QuestJournal(this.questManager, this.itemManager)
     this.regionProgression = new RegionProgression(this.regionManager)
     this.saveSystem = new SaveSystem()
+    this.regionalSoundscape = new RegionalSoundscape()
 
     this.uiManager.setInventoryHandlers({
       onEquip: (itemId) => {
@@ -117,10 +126,12 @@ export default class GameManager {
     // Lighting
     const ambientLight = new HemisphericLight('ambientLight', new Vector3(0.5, 1, 0.5), this.scene)
     ambientLight.intensity = 0.56
+    this.ambientLight = ambientLight
 
     const sunLight = new DirectionalLight('sunLight', new Vector3(-0.45, -1, -0.15), this.scene)
     sunLight.position = new Vector3(420, 650, 280)
     sunLight.intensity = 1.28
+    this.sunLight = sunLight
 
     this.shadowGenerator = new ShadowGenerator(1024, sunLight)
     this.shadowGenerator.usePoissonSampling = true
@@ -140,6 +151,7 @@ export default class GameManager {
     skyboxMaterial.inclination = 0.46
     skyboxMaterial.azimuth = 0.27
     skybox.material = skyboxMaterial
+    this.skyMaterial = skyboxMaterial
 
     this.scene.fogMode = Scene.FOGMODE_EXP2
     this.scene.fogDensity = 0.00075
@@ -297,8 +309,49 @@ export default class GameManager {
     await this.worldManager.generateWorld(region)
     this.regionProgression.setCurrentRegion(region.id)
     this.uiManager.updateRegionProgress(this.regionProgression.getViewState())
+    this.applyRegionAtmosphereEffects(region.id, region.biome)
+    this.regionalSoundscape.applyRegion(region)
     this.saveGame('checkpoint')
     return true
+  }
+
+  private applyRegionAtmosphereEffects(regionId: string, biome?: string): void {
+    if (!this.scene || !this.ambientLight || !this.sunLight) return
+
+    // Dispose previous ambient particle effects
+    for (const handle of this.ambientEffects) handle.dispose()
+    this.ambientEffects = []
+
+    // Apply per-region atmosphere (lighting, fog, color grading)
+    const atmosphere = getRegionAtmosphere(regionId)
+    if (!atmosphere) return
+    applyRegionAtmosphere(this.scene, atmosphere)
+
+    // Update light colours and intensities
+    const { ambientColor, sunColor, sunIntensity, sunDirection } = atmosphere
+    this.ambientLight.diffuse.set(ambientColor.r, ambientColor.g, ambientColor.b)
+    this.ambientLight.intensity = atmosphere.ambientIntensity ?? 0.56
+
+    this.sunLight.diffuse.set(sunColor.r, sunColor.g, sunColor.b)
+    this.sunLight.intensity = sunIntensity
+    this.sunLight.direction.set(sunDirection.x, sunDirection.y, sunDirection.z)
+
+    // Sky material tweaks based on rift influence / haze
+    if (this.skyMaterial) {
+      const haze = atmosphere.hazeFactor
+      const rift = atmosphere.riftInfluence
+      this.skyMaterial.luminance   = 0.7 - rift * 0.3
+      this.skyMaterial.turbidity   = 9 + haze * 12
+      this.skyMaterial.rayleigh    = 2.1 - rift * 1.0
+      this.skyMaterial.inclination = 0.46 + haze * 0.08
+    }
+
+    // Spawn ambient particle effects per biome
+    const centre = new Vector3(0, 0, 0)
+    if (biome === 'warfront') {
+      this.ambientEffects.push(createWarAshEffect(this.scene, centre, 120))
+      this.ambientEffects.push(createDustEffect(this.scene, centre, 120))
+    }
   }
 
   private setupPersistenceShortcuts(): void {

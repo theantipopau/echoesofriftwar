@@ -23,6 +23,7 @@ export interface DialogueViewState {
   name: string
   text: string
   options: Array<{ id: string; text: string }>
+  portraitKey?: string
 }
 
 export interface QuestViewState {
