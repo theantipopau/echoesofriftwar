@@ -85,6 +85,7 @@ export default class WorldManager {
   private poiMarkers: AbstractMesh[] = []
   private environmentNodes: Node[] = []
   private environmentEffects: RiftParticleHandle[] = []
+  private propMaterialCache = new Map<string, StandardMaterial>()
   private deltaTime: number = 0
   private lastFrameTime: number = performance.now()
   private interactionCooldown = 0
@@ -1016,6 +1017,7 @@ export default class WorldManager {
     }
 
     this.createVegetationScatter(region)
+    this.createTerrainArtScatter(region)
     this.propNodes.forEach((node) => this.markNodeAsShadowReceiver(node))
   }
 
@@ -1031,6 +1033,48 @@ export default class WorldManager {
     if (typeof maybeMesh.receiveShadows === 'boolean') {
       maybeMesh.receiveShadows = true
     }
+  }
+
+  private getPropMaterial(
+    key: string,
+    options: {
+      diffuseColor?: Color3
+      emissiveColor?: Color3
+      texturePath?: string
+      opacityPath?: string
+      doubleSided?: boolean
+      disableLighting?: boolean
+    },
+  ): StandardMaterial {
+    const existing = this.propMaterialCache.get(key)
+    if (existing) {
+      return existing
+    }
+
+    const material = new StandardMaterial(`prop_cached_${key}`, this.scene)
+    if (options.diffuseColor) {
+      material.diffuseColor = options.diffuseColor.clone()
+    }
+    if (options.emissiveColor) {
+      material.emissiveColor = options.emissiveColor.clone()
+    }
+    if (options.texturePath) {
+      const texture = new Texture(assetPath(options.texturePath), this.scene)
+      texture.anisotropicFilteringLevel = 8
+      material.diffuseTexture = texture
+      if (options.opacityPath) {
+        const opacityTexture = new Texture(assetPath(options.opacityPath), this.scene)
+        opacityTexture.hasAlpha = true
+        opacityTexture.anisotropicFilteringLevel = 8
+        material.opacityTexture = opacityTexture
+        material.useAlphaFromDiffuseTexture = true
+      }
+    }
+    material.backFaceCulling = !(options.doubleSided ?? false)
+    material.disableLighting = options.disableLighting ?? false
+    material.specularColor = Color3.Black()
+    this.propMaterialCache.set(key, material)
+    return material
   }
 
   public getShadowCasterMeshes(maxCount: number = 70): AbstractMesh[] {
@@ -1098,6 +1142,116 @@ export default class WorldManager {
 
     enemyEntries.forEach((enemy) => addMeshes(enemy.getShadowMeshes()))
     return Array.from(unique.values()).slice(0, maxCount)
+  }
+
+  private createTerrainArtScatter(region: RegionData): void {
+    const decalMaterialByBiome: Partial<Record<RegionData['biome'], StandardMaterial[]>> = {
+      coast: [
+        this.getPropMaterial('decal_meadow', {
+          texturePath: 'art/decal-meadow.svg',
+          opacityPath: 'art/decal-meadow.svg',
+          emissiveColor: new Color3(0.08, 0.1, 0.06),
+          doubleSided: true,
+        }),
+        this.getPropMaterial('decal_path', {
+          texturePath: 'art/decal-path.svg',
+          opacityPath: 'art/decal-path.svg',
+          emissiveColor: new Color3(0.08, 0.07, 0.04),
+          doubleSided: true,
+        }),
+      ],
+      forest: [
+        this.getPropMaterial('decal_meadow', {
+          texturePath: 'art/decal-meadow.svg',
+          opacityPath: 'art/decal-meadow.svg',
+          emissiveColor: new Color3(0.08, 0.1, 0.06),
+          doubleSided: true,
+        }),
+        this.getPropMaterial('decal_riftscar', {
+          texturePath: 'art/decal-riftscar.svg',
+          opacityPath: 'art/decal-riftscar.svg',
+          emissiveColor: new Color3(0.12, 0.08, 0.14),
+          doubleSided: true,
+        }),
+      ],
+      wilderness: [
+        this.getPropMaterial('decal_path', {
+          texturePath: 'art/decal-path.svg',
+          opacityPath: 'art/decal-path.svg',
+          emissiveColor: new Color3(0.08, 0.07, 0.04),
+          doubleSided: true,
+        }),
+        this.getPropMaterial('decal_meadow', {
+          texturePath: 'art/decal-meadow.svg',
+          opacityPath: 'art/decal-meadow.svg',
+          emissiveColor: new Color3(0.08, 0.1, 0.06),
+          doubleSided: true,
+        }),
+      ],
+      warfront: [
+        this.getPropMaterial('decal_ash', {
+          texturePath: 'art/decal-ash.svg',
+          opacityPath: 'art/decal-ash.svg',
+          emissiveColor: new Color3(0.1, 0.08, 0.07),
+          doubleSided: true,
+        }),
+        this.getPropMaterial('decal_path', {
+          texturePath: 'art/decal-path.svg',
+          opacityPath: 'art/decal-path.svg',
+          emissiveColor: new Color3(0.08, 0.07, 0.04),
+          doubleSided: true,
+        }),
+      ],
+      ruins: [
+        this.getPropMaterial('decal_ash', {
+          texturePath: 'art/decal-ash.svg',
+          opacityPath: 'art/decal-ash.svg',
+          emissiveColor: new Color3(0.1, 0.08, 0.07),
+          doubleSided: true,
+        }),
+      ],
+    }
+
+    const materials = decalMaterialByBiome[region.biome]
+    if (!materials?.length) {
+      return
+    }
+
+    const scatterCountByBiome: Partial<Record<RegionData['biome'], number>> = {
+      coast: 70,
+      forest: 90,
+      wilderness: 80,
+      warfront: 95,
+      ruins: 48,
+    }
+
+    const worldMargin = 100
+    const span = this.config.worldSize - worldMargin * 2
+    const scatterCount = scatterCountByBiome[region.biome] ?? 60
+
+    for (let index = 0; index < scatterCount; index++) {
+      const x = worldMargin + (((index * 149) % span) + Math.sin(index * 0.41) * 38)
+      const z = worldMargin + (((index * 197) % span) + Math.cos(index * 0.29) * 38)
+
+      const nearPoi = region.pointsOfInterest.some((poi) => {
+        const dx = poi.position.x - x
+        const dz = poi.position.y - z
+        return (dx * dx) + (dz * dz) < 1200
+      })
+      if (nearPoi) {
+        continue
+      }
+
+      const y = this.sampleTerrainHeight(x, z, region.biome, region.id)
+      const decal = CreatePlane(`terrain_art_${region.id}_${index}`, { width: 6.4, height: 6.4 }, this.scene)
+      decal.position = new Vector3(x, y + 0.04, z)
+      decal.rotation.x = Math.PI / 2
+      decal.rotation.z = (index % 11) * 0.27
+      decal.scaling = new Vector3(0.85 + (index % 5) * 0.22, 0.85 + (index % 7) * 0.18, 1)
+      decal.material = materials[index % materials.length]
+      decal.isPickable = false
+      this.propNodes.push(decal)
+    }
   }
 
   private createVegetationScatter(region: RegionData): void {
@@ -1478,28 +1632,97 @@ export default class WorldManager {
   private createSignalCart(region: RegionData, x: number, z: number): void {
     const root = new TransformNode(`signal_cart_${x}_${z}`, this.scene)
     root.position = new Vector3(x, this.sampleTerrainHeight(x, z, region.biome, region.id), z)
-    const cart = CreateBox(`cart_body_${x}_${z}`, { width: 2.2, depth: 1.4, height: 1 }, this.scene)
+    const cart = CreateBox(`cart_body_${x}_${z}`, { width: 2.4, depth: 1.5, height: 0.85 }, this.scene)
     cart.parent = root
-    cart.position.y = 0.8
-    const flag = CreatePlane(`cart_flag_${x}_${z}`, { width: 1.2, height: 1.8 }, this.scene)
-    flag.parent = root
-    flag.position = new Vector3(1.2, 1.8, 0)
-    const cartMat = new StandardMaterial(`cart_mat_${x}_${z}`, this.scene)
-    cartMat.emissiveColor = new Color3(0.42, 0.32, 0.22)
+    cart.position.y = 0.92
+    const cartMat = this.getPropMaterial('signal_cart_body', {
+      diffuseColor: new Color3(0.34, 0.24, 0.16),
+      emissiveColor: new Color3(0.12, 0.08, 0.04),
+    })
     cart.material = cartMat
-    const flagMat = new StandardMaterial(`flag_mat_${x}_${z}`, this.scene)
-    flagMat.emissiveColor = new Color3(0.8, 0.2, 0.2)
-    flag.material = flagMat
+
+    ;[
+      new Vector3(-0.96, 0.42, -0.82),
+      new Vector3(-0.96, 0.42, 0.82),
+      new Vector3(0.96, 0.42, -0.82),
+      new Vector3(0.96, 0.42, 0.82),
+    ].forEach((offset, index) => {
+      const wheel = CreateCylinder(`signal_cart_wheel_${x}_${z}_${index}`, { height: 0.16, diameter: 0.84, tessellation: 16 }, this.scene)
+      wheel.parent = root
+      wheel.position = offset
+      wheel.rotation.z = Math.PI / 2
+      wheel.material = this.getPropMaterial('signal_cart_wheel', {
+        diffuseColor: new Color3(0.2, 0.15, 0.1),
+        emissiveColor: new Color3(0.05, 0.03, 0.02),
+      })
+    })
+
+    const mast = CreateCylinder(`signal_cart_mast_${x}_${z}`, { height: 3.4, diameter: 0.12 }, this.scene)
+    mast.parent = root
+    mast.position = new Vector3(1.05, 1.9, 0)
+    mast.material = this.getPropMaterial('signal_cart_mast', {
+      diffuseColor: new Color3(0.28, 0.2, 0.12),
+      emissiveColor: new Color3(0.08, 0.05, 0.02),
+    })
+
+    const pennant = CreatePlane(`cart_flag_${x}_${z}`, { width: 1.05, height: 1.55 }, this.scene)
+    pennant.parent = root
+    pennant.position = new Vector3(1.48, 2.45, 0)
+    pennant.rotation.y = -0.12
+    pennant.material = this.getPropMaterial('signal_cart_pennant', {
+      texturePath: 'icons/quest.svg',
+      emissiveColor: new Color3(0.3, 0.2, 0.12),
+      doubleSided: true,
+    })
+
+    const lantern = CreateSphere(`signal_cart_lantern_${x}_${z}`, { diameter: 0.36 }, this.scene)
+    lantern.parent = root
+    lantern.position = new Vector3(1.08, 3.35, 0)
+    lantern.material = this.getPropMaterial('signal_cart_lantern', {
+      diffuseColor: new Color3(0.9, 0.74, 0.28),
+      emissiveColor: new Color3(0.32, 0.22, 0.06),
+      disableLighting: true,
+    })
     this.propNodes.push(root)
   }
 
   private createBanner(region: RegionData, x: number, z: number): void {
-    const banner = CreatePlane(`banner_${x}_${z}`, { width: 2, height: 3 }, this.scene)
-    banner.position = new Vector3(x, this.sampleTerrainHeight(x, z, region.biome, region.id) + 3, z)
-    const bannerMat = new StandardMaterial(`banner_mat_${x}_${z}`, this.scene)
-    bannerMat.emissiveColor = new Color3(0.7, 0.15, 0.15)
-    banner.material = bannerMat
-    this.propNodes.push(banner)
+    const root = new TransformNode(`banner_root_${x}_${z}`, this.scene)
+    root.position = new Vector3(x, this.sampleTerrainHeight(x, z, region.biome, region.id), z)
+
+    const pole = CreateCylinder(`banner_pole_${x}_${z}`, { height: 4.8, diameter: 0.14 }, this.scene)
+    pole.parent = root
+    pole.position.y = 2.4
+    pole.material = this.getPropMaterial('banner_pole', {
+      diffuseColor: new Color3(0.28, 0.2, 0.12),
+      emissiveColor: new Color3(0.08, 0.05, 0.02),
+    })
+
+    const crossbar = CreateBox(`banner_crossbar_${x}_${z}`, { width: 1.7, depth: 0.1, height: 0.1 }, this.scene)
+    crossbar.parent = root
+    crossbar.position = new Vector3(0.72, 4.2, 0)
+    crossbar.material = pole.material
+
+    const cloth = CreatePlane(`banner_cloth_${x}_${z}`, { width: 1.25, height: 2.1 }, this.scene)
+    cloth.parent = root
+    cloth.position = new Vector3(0.7, 3.05, 0)
+    cloth.rotation.y = -0.05
+    cloth.material = this.getPropMaterial('banner_cloth', {
+      texturePath: 'art/rift-lines.svg',
+      emissiveColor: new Color3(0.18, 0.08, 0.06),
+      doubleSided: true,
+    })
+
+    const emblem = CreatePlane(`banner_emblem_${x}_${z}`, { width: 0.62, height: 0.62 }, this.scene)
+    emblem.parent = root
+    emblem.position = new Vector3(0.7, 3.05, -0.02)
+    emblem.material = this.getPropMaterial('banner_emblem', {
+      texturePath: 'icons/quest.svg',
+      emissiveColor: new Color3(0.22, 0.16, 0.08),
+      doubleSided: true,
+    })
+
+    this.propNodes.push(root)
   }
 
   private createBrazier(region: RegionData, x: number, z: number): void {
@@ -1508,16 +1731,31 @@ export default class WorldManager {
     const brazier = CreateCylinder(`brazier_vessel_${x}_${z}`, { height: 1.2, diameterTop: 1.4, diameterBottom: 1.8 }, this.scene)
     brazier.parent = root
     brazier.position.y = 0.8
+    ;[-0.48, 0.48].forEach((xOffset, index) => {
+      const leg = CreateCylinder(`brazier_leg_${x}_${z}_${index}`, { height: 1.3, diameterTop: 0.08, diameterBottom: 0.12 }, this.scene)
+      leg.parent = root
+      leg.position = new Vector3(xOffset, 0.5, index === 0 ? -0.34 : 0.34)
+      leg.material = this.getPropMaterial('brazier_leg', {
+        diffuseColor: new Color3(0.22, 0.18, 0.14),
+        emissiveColor: new Color3(0.06, 0.04, 0.03),
+      })
+    })
     const flame = CreatePolyhedron(`brazier_flame_${x}_${z}`, { type: 0, size: 1 }, this.scene)
     flame.parent = root
     flame.position.y = 2.2
-    const brazierMat = new StandardMaterial(`brazier_mat_${x}_${z}`, this.scene)
-    brazierMat.emissiveColor = new Color3(0.5, 0.3, 0.2)
+    const brazierMat = this.getPropMaterial('brazier_bowl', {
+      diffuseColor: new Color3(0.36, 0.24, 0.18),
+      emissiveColor: new Color3(0.09, 0.05, 0.03),
+    })
     brazier.material = brazierMat
-    const flameMat = new StandardMaterial(`flame_mat_${x}_${z}`, this.scene)
-    flameMat.emissiveColor = new Color3(1, 0.6, 0.1)
+    const flameMat = this.getPropMaterial('brazier_flame', {
+      diffuseColor: new Color3(1, 0.64, 0.18),
+      emissiveColor: new Color3(0.34, 0.16, 0.04),
+      disableLighting: true,
+    })
     flame.material = flameMat
     this.propNodes.push(root)
+    this.environmentEffects.push(createCampfireEffect(this.scene, root.position.add(new Vector3(0, 1.2, 0))))
   }
 
   private createRelayBeacon(region: RegionData, x: number, z: number): void {
@@ -1529,12 +1767,42 @@ export default class WorldManager {
     const beacon = CreateSphere(`beacon_light_${x}_${z}`, { diameter: 1.4 }, this.scene)
     beacon.parent = root
     beacon.position.y = 6.4
-    const postMat = new StandardMaterial(`beacon_post_mat_${x}_${z}`, this.scene)
-    postMat.emissiveColor = new Color3(0.45, 0.42, 0.4)
+    ;[
+      new Vector3(-0.6, 1.3, -0.6),
+      new Vector3(0.6, 1.3, -0.6),
+      new Vector3(0, 1.3, 0.8),
+    ].forEach((offset, index) => {
+      const brace = CreateCylinder(`beacon_brace_${x}_${z}_${index}`, { height: 3.4, diameterTop: 0.08, diameterBottom: 0.12 }, this.scene)
+      brace.parent = root
+      brace.position = offset
+      brace.rotation.x = index === 2 ? 0.3 : -0.3
+      brace.rotation.z = index === 1 ? -0.34 : 0.34
+      brace.material = this.getPropMaterial('beacon_brace', {
+        diffuseColor: new Color3(0.26, 0.2, 0.14),
+        emissiveColor: new Color3(0.06, 0.04, 0.02),
+      })
+    })
+    const postMat = this.getPropMaterial('beacon_post', {
+      diffuseColor: new Color3(0.42, 0.36, 0.28),
+      emissiveColor: new Color3(0.08, 0.07, 0.04),
+    })
     post.material = postMat
-    const beaconMat = new StandardMaterial(`beacon_light_mat_${x}_${z}`, this.scene)
-    beaconMat.emissiveColor = new Color3(0.95, 0.85, 0.3)
+    const beaconMat = this.getPropMaterial('beacon_light', {
+      diffuseColor: new Color3(0.95, 0.85, 0.3),
+      emissiveColor: new Color3(0.36, 0.28, 0.08),
+      disableLighting: true,
+    })
     beacon.material = beaconMat
+
+    const pennant = CreatePlane(`beacon_pennant_${x}_${z}`, { width: 0.85, height: 1.2 }, this.scene)
+    pennant.parent = root
+    pennant.position = new Vector3(0.54, 4.7, 0)
+    pennant.rotation.y = 0.2
+    pennant.material = this.getPropMaterial('beacon_pennant', {
+      texturePath: 'icons/poi-town.svg',
+      emissiveColor: new Color3(0.18, 0.14, 0.08),
+      doubleSided: true,
+    })
     this.propNodes.push(root)
   }
 
@@ -1549,6 +1817,17 @@ export default class WorldManager {
       crateMat.emissiveColor = new Color3(0.6, 0.48, 0.32)
       crate.material = crateMat
     }
+
+    const tarp = CreatePlane(`supplies_tarp_${x}_${z}`, { width: 3.8, height: 1.4 }, this.scene)
+    tarp.parent = root
+    tarp.position = new Vector3(0, 1.72, 0)
+    tarp.rotation.x = Math.PI / 2
+    tarp.material = this.getPropMaterial('supplies_tarp', {
+      texturePath: 'art/rift-noise.svg',
+      emissiveColor: new Color3(0.07, 0.08, 0.12),
+      doubleSided: true,
+    })
+
     this.propNodes.push(root)
   }
 
@@ -1993,16 +2272,25 @@ export default class WorldManager {
         const pole = CreateCylinder(`torch_pole_${prop.id}`, { height: 1.8, diameter: 0.12 }, this.scene)
         pole.parent = propNode
         pole.position.y = 0.9
-        const poleMat = new StandardMaterial(`torch_pole_mat_${prop.id}`, this.scene)
-        poleMat.diffuseColor = new Color3(0.22, 0.15, 0.08)
-        poleMat.emissiveColor = new Color3(0.08, 0.05, 0.02)
+        const poleMat = this.getPropMaterial('torch_pole', {
+          diffuseColor: new Color3(0.22, 0.15, 0.08),
+          emissiveColor: new Color3(0.08, 0.05, 0.02),
+        })
         pole.material = poleMat
+
+        const bracket = CreateBox(`torch_bracket_${prop.id}`, { width: 0.48, depth: 0.1, height: 0.1 }, this.scene)
+        bracket.parent = propNode
+        bracket.position = new Vector3(0.2, 1.55, 0)
+        bracket.material = poleMat
 
         const flame = CreatePolyhedron(`flame_${prop.id}`, { type: 0, size: 0.45 }, this.scene)
         flame.parent = propNode
         flame.position.y = 1.8
-        const flameMat = new StandardMaterial(`prop_mat_${prop.id}`, this.scene)
-        flameMat.emissiveColor = new Color3(1, 0.55, 0.12)
+        const flameMat = this.getPropMaterial('torch_flame', {
+          diffuseColor: new Color3(1, 0.55, 0.12),
+          emissiveColor: new Color3(0.34, 0.16, 0.04),
+          disableLighting: true,
+        })
         flame.material = flameMat
         emitFireEffect = true
         fireHeight = prop.id.includes('fire') || prop.id.includes('camp') || prop.id.includes('brazier') ? 0.2 : 1.8
@@ -2043,21 +2331,42 @@ export default class WorldManager {
         const plaque = CreateBox(`sign_plaque_${prop.id}`, { width: 1.1, height: 0.6, depth: 0.12 }, this.scene)
         plaque.parent = propNode
         plaque.position.y = 1.45
-        const postMat = new StandardMaterial(`sign_mat_${prop.id}`, this.scene)
-        postMat.diffuseColor = new Color3(0.4, 0.26, 0.12)
-        postMat.emissiveColor = new Color3(0.12, 0.08, 0.03)
+        const postMat = this.getPropMaterial('sign_post', {
+          diffuseColor: new Color3(0.4, 0.26, 0.12),
+          emissiveColor: new Color3(0.12, 0.08, 0.03),
+        })
         post.material = postMat
         plaque.material = postMat
+
+        const face = CreatePlane(`sign_face_${prop.id}`, { width: 0.88, height: 0.48 }, this.scene)
+        face.parent = propNode
+        face.position = new Vector3(0, 1.45, -0.07)
+        face.material = this.getPropMaterial('sign_face', {
+          texturePath: 'icons/poi-town.svg',
+          emissiveColor: new Color3(0.18, 0.14, 0.08),
+          doubleSided: true,
+        })
       } else if (prop.type === 'corpse') {
         propNode = new TransformNode(`prop_${prop.id}`, this.scene)
         const body = CreateBox(`corpse_${prop.id}`, { width: 0.9, depth: 2.1, height: 0.28 }, this.scene)
         body.parent = propNode
         body.position.y = 0.14
         body.rotation.z = 0.15
-        const bodyMat = new StandardMaterial(`corpse_mat_${prop.id}`, this.scene)
-        bodyMat.diffuseColor = new Color3(0.32, 0.16, 0.16)
-        bodyMat.emissiveColor = new Color3(0.08, 0.02, 0.02)
+        const bodyMat = this.getPropMaterial('corpse_body', {
+          diffuseColor: new Color3(0.32, 0.16, 0.16),
+          emissiveColor: new Color3(0.08, 0.02, 0.02),
+        })
         body.material = bodyMat
+
+        const shroud = CreatePlane(`corpse_shroud_${prop.id}`, { width: 0.96, height: 1.8 }, this.scene)
+        shroud.parent = propNode
+        shroud.position = new Vector3(0, 0.26, 0.1)
+        shroud.rotation.x = Math.PI / 2
+        shroud.material = this.getPropMaterial('corpse_shroud', {
+          texturePath: 'art/rift-noise.svg',
+          emissiveColor: new Color3(0.05, 0.03, 0.03),
+          doubleSided: true,
+        })
       } else if (prop.type === 'fallen_log') {
         propNode = new TransformNode(`prop_${prop.id}`, this.scene)
         const log = CreateCylinder(`fallen_log_${prop.id}`, { height: 2.6, diameterTop: 0.45, diameterBottom: 0.6, tessellation: 10 }, this.scene)

@@ -3,10 +3,13 @@ import { Scene } from '@babylonjs/core/scene'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import { ColorCurves } from '@babylonjs/core/Materials/colorCurves'
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
+import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder'
 import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight'
 import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight'
 import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator'
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
+import { Texture } from '@babylonjs/core/Materials/Textures/texture'
 import { SkyMaterial } from '@babylonjs/materials/sky'
 import type { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh'
 import { applyRegionAtmosphere, getRegionAtmosphere } from '../visual/RegionAtmosphere'
@@ -47,6 +50,8 @@ export default class GameManager {
   private sunLight: DirectionalLight | null = null
   private ambientLight: HemisphericLight | null = null
   private skyMaterial: SkyMaterial | null = null
+  private skyOverlayMaterial: StandardMaterial | null = null
+  private skyOverlayTexturePath: string | null = null
   private ambientEffects: RiftParticleHandle[] = []
   private regionalSoundscape: RegionalSoundscape
   private lastShadowCasterRefreshMs = 0
@@ -152,6 +157,18 @@ export default class GameManager {
     skyboxMaterial.azimuth = 0.27
     skybox.material = skyboxMaterial
     this.skyMaterial = skyboxMaterial
+
+    const skyOverlay = CreatePlane('skyOverlay', { width: 3600, height: 3600 }, this.scene)
+    skyOverlay.position = new Vector3(0, 780, 0)
+    skyOverlay.rotation.x = Math.PI / 2
+    skyOverlay.isPickable = false
+    const skyOverlayMaterial = new StandardMaterial('skyOverlayMaterial', this.scene)
+    skyOverlayMaterial.backFaceCulling = false
+    skyOverlayMaterial.disableLighting = true
+    skyOverlayMaterial.alpha = 0.22
+    skyOverlayMaterial.emissiveColor = new Color3(0.24, 0.24, 0.26)
+    skyOverlay.material = skyOverlayMaterial
+    this.skyOverlayMaterial = skyOverlayMaterial
 
     this.scene.fogMode = Scene.FOGMODE_EXP2
     this.scene.fogDensity = 0.00075
@@ -340,11 +357,16 @@ export default class GameManager {
     if (this.skyMaterial) {
       const haze = atmosphere.hazeFactor
       const rift = atmosphere.riftInfluence
-      this.skyMaterial.luminance   = 0.7 - rift * 0.3
-      this.skyMaterial.turbidity   = 9 + haze * 12
-      this.skyMaterial.rayleigh    = 2.1 - rift * 1.0
+      this.skyMaterial.luminance = 0.7 - rift * 0.3
+      this.skyMaterial.turbidity = 9 + haze * 12
+      this.skyMaterial.rayleigh = 2.1 - rift * 1.0
       this.skyMaterial.inclination = 0.46 + haze * 0.08
+      this.skyMaterial.mieCoefficient = 0.006 + haze * 0.004 + rift * 0.003
+      this.skyMaterial.mieDirectionalG = 0.9 + haze * 0.06
+      this.skyMaterial.azimuth = 0.25 + atmosphere.hueShift * 0.08
     }
+
+    this.updateSkyOverlay(regionId, biome, atmosphere.hazeFactor, atmosphere.riftInfluence)
 
     // Spawn ambient particle effects per biome
     const centre = new Vector3(0, 0, 0)
@@ -352,6 +374,41 @@ export default class GameManager {
       this.ambientEffects.push(createWarAshEffect(this.scene, centre, 120))
       this.ambientEffects.push(createDustEffect(this.scene, centre, 120))
     }
+  }
+
+  private updateSkyOverlay(regionId: string, biome: string | undefined, hazeFactor: number, riftInfluence: number): void {
+    if (!this.skyOverlayMaterial) {
+      return
+    }
+
+    const texturePathByBiome: Partial<Record<NonNullable<typeof biome>, string>> = {
+      coast: 'art/sky-coast.svg',
+      forest: 'art/sky-forest.svg',
+      wilderness: 'art/sky-wilderness.svg',
+      warfront: 'art/sky-warfront.svg',
+    }
+
+    const texturePath = regionId === 'culvert_breach' ? null : (biome ? texturePathByBiome[biome] ?? null : null)
+    if (!texturePath) {
+      this.skyOverlayMaterial.alpha = 0
+      this.skyOverlayTexturePath = null
+      this.skyOverlayMaterial.diffuseTexture = null
+      this.skyOverlayMaterial.opacityTexture = null
+      return
+    }
+
+    if (this.skyOverlayTexturePath !== texturePath) {
+      const texture = new Texture(assetPath(texturePath), this.scene)
+      texture.hasAlpha = true
+      texture.anisotropicFilteringLevel = 4
+      this.skyOverlayMaterial.diffuseTexture = texture
+      this.skyOverlayMaterial.opacityTexture = texture
+      this.skyOverlayMaterial.useAlphaFromDiffuseTexture = true
+      this.skyOverlayTexturePath = texturePath
+    }
+
+    this.skyOverlayMaterial.alpha = 0.14 + hazeFactor * 0.12 + riftInfluence * 0.08
+    this.skyOverlayMaterial.emissiveColor = Color3.Lerp(new Color3(0.2, 0.22, 0.24), new Color3(0.34, 0.18, 0.38), riftInfluence)
   }
 
   private setupPersistenceShortcuts(): void {
