@@ -1,5 +1,9 @@
 # GUI & UI Overhaul - Comprehensive Professional RPG Interface
 
+> Aspirational UI concept document from the earlier prototype.
+>
+> The current shipped UI is the HTML overlay in `src/systems/ui/`, not the component set described below.
+
 ## Overview
 Complete redesign of the game's graphical user interface with professional RPG standards. Moving from basic functional UI to a polished, feature-rich interface system.
 

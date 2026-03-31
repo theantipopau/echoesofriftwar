@@ -811,5 +811,95 @@
       },
       "end": { "id": "end", "text": "The watch endures.", "options": [] }
     }
+  },
+  {
+    "id": "chronicler_nara",
+    "name": "Chronicler Nara Venn",
+    "role": "story",
+    "faction": "Road Wardens",
+    "regionId": "outer_roads_to_krondor",
+    "position": { "x": 404, "y": 286 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A former dispatch scribe recording the names of the dead and the miles of road reclaimed from the Rift.",
+    "requiredWorldStateTags": ["rift_ritual_sealed"],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "When the road goes quiet after a battle, everyone starts talking about wagons, tariffs, and strategy. Someone still has to remember who paid for each reopened mile.",
+        "options": [
+          { "id": "ask_names", "text": "You're keeping a record of the dead?", "next": "names" },
+          { "id": "ask_inland", "text": "What do the inland roads look like now?", "next": "inland" },
+          { "id": "ask_rift", "text": "Do you think the Rift is truly beaten back here?", "next": "rift" },
+          { "id": "leave", "text": "Keep their names intact.", "next": "end" }
+        ]
+      },
+      "names": {
+        "id": "names",
+        "text": "Roadwardens, relay runners, bridge crews, merchants, hired blades. The ledgers used to track cargo. Now they track memory too. If the roads live, their names should travel with them.",
+        "options": [
+          { "id": "solemn", "text": "That matters more than most victories.", "next": "end" }
+        ]
+      },
+      "inland": {
+        "id": "inland",
+        "text": "Patchwork. One clean stretch, one burnt tollhouse, one checkpoint living off old grain and older orders. The inland territories are still standing, but many of them are doing it out of habit rather than certainty.",
+        "options": [
+          { "id": "noted", "text": "Then the road east is only the beginning.", "next": "end" }
+        ]
+      },
+      "rift": {
+        "id": "rift",
+        "text": "Beaten back, yes. Finished, no. The Rift leaves habits behind even when the light goes out. Fear. Silence. Whole towns learning to listen for a sound that is no longer there.",
+        "options": [
+          { "id": "understood", "text": "Then recovery is its own campaign.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "A reopened road is still a graveyard if no one remembers how it was won.", "options": [] }
+    }
+  },
+  {
+    "id": "signalmaster_oren",
+    "name": "Signalmaster Oren Vale",
+    "role": "story",
+    "faction": "Relay Corps",
+    "regionId": "outer_roads_to_krondor",
+    "position": { "x": 1018, "y": 282 },
+    "portraitKey": "portraits_guard",
+    "shortBio": "A signal officer relighting the eastern beacons now that the Inner Nexus has gone dark.",
+    "requiredWorldStateTags": ["rift_ritual_sealed"],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "First quiet night we've had since the relay came back online. No purple flare, no broken signal chain, just the wind and a clean lamp. I had almost forgotten what a normal watch sounded like.",
+        "options": [
+          { "id": "ask_beyond", "text": "What lies beyond the eastern passage?", "next": "beyond" },
+          { "id": "ask_relays", "text": "How much of the signal chain still survives?", "next": "relays" },
+          { "id": "ask_future", "text": "What happens now that the ritual is gone?", "next": "future" },
+          { "id": "leave", "text": "Keep the line lit.", "next": "end" }
+        ]
+      },
+      "beyond": {
+        "id": "beyond",
+        "text": "More roadward stations, a bridge the engineers swear can still hold wagons, and the first inland posts that have seen fresh signals in years. Beyond that? Garrison towns waiting to learn whether this reopening is real.",
+        "options": [
+          { "id": "ready", "text": "Then they'll have their answer soon enough.", "next": "end" }
+        ]
+      },
+      "relays": {
+        "id": "relays",
+        "text": "Enough survived to make a chain again, not enough to trust it blindly. Every beacon east of here needs crews, glass, fuel, and people stubborn enough to stay awake through the dark hours.",
+        "options": [
+          { "id": "grim", "text": "So the road still depends on fragile things.", "next": "end" }
+        ]
+      },
+      "future": {
+        "id": "future",
+        "text": "Convoys, scouts, engineers, priests, merchants, officers, opportunists. Once a road opens, everyone tries to own the future that follows it. That's where the next trouble usually begins.",
+        "options": [
+          { "id": "expected", "text": "Then I should expect the next frontier to be crowded.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "If the lamps stay gold instead of violet, we may finally be moving forward again.", "options": [] }
+    }
   }
 ]

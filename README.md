@@ -60,7 +60,7 @@ npm run preview
 2. **Forest Outskirts** — Transition zone with escalating enemies and story hooks.
 3. **Warfront Approach** — Active war zone with trenches, fortifications, and dispatch recovery objective.
 4. **Culvert Breach** (Mini-dungeon) — Underground sealed passage beneath the war road. Defeat the Rift overseer to recover Krondor dispatches.
-5. **Outer Roads to Krondor** (Preview) — Unlocked after dispatch recovery; playable content coming soon.
+5. **Outer Roads to Krondor** — Playable frontier stretch unlocked after dispatch recovery, with patrol and Rift-cleansing follow-up quests.
 
 ### Quest Pipeline
 
@@ -130,25 +130,27 @@ npm run build
 
 ### Environment Size
 
-- Main bundle: **~118 KB** (gzipped ~32 KB)
-- Babylon.js core: **~1.0 MB** (gzipped ~231 KB)
-- Total: **~1.1 MB** (gzipped ~263 KB)
+- Production output is generated into `dist/assets/` by Vite.
+- Current builds include a large Babylon core chunk, so expect bundle-size warnings until chunk splitting is added.
+- Use `npm run build` regularly when expanding visuals or imported models to track size regressions.
 
 ## Development Roadmap
 
 ### In Progress
-- Quest testing and dispatch turn-in validation
-- Additional consequence chains (NPC state evolution)
-- Expanding Outer Roads to Krondor with playable encounters
-- World state-driven cascading events
+- Merchant and trainer interactions beyond placeholder dialogue responses
+- Post-ritual consequence pass for the eastern road and inland foreshadowing
+- Environmental prop/model replacement for placeholder geometry
+- Babylon bundle splitting and asset-size control
 
 ### Planned
-- Player equipment affecting combat/stats
-- Training system for leveling
-- Advanced enemy AI (formation tactics, special attacks)
-- Fast travel and region map
-- Save/load system
-- Dialogue bark system and ambient NPC routines
+- Advanced enemy AI and encounter scripting
+- Ability/status-effect layer for combat depth
+- True merchant inventory, economy, and training flows
+- Dialogue barks, ambient NPC routines, and more reactive settlement scenes
+- Additional playable inland regions beyond the Eastern Passage
+- More portrait/model coverage for named NPCs and elites
+
+See `ROADMAP.md` for the current delivery order and content-expansion priorities.
 
 ## Project Structure
 

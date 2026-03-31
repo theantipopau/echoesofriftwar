@@ -1,5 +1,9 @@
 # GUI Transformation - Complete Visual Overhaul
 
+> Archived visual-direction concept from the earlier prototype UI pass.
+>
+> Some goals still apply aesthetically, but the implementation references below do not match the current Babylon.js/HTML overlay code.
+
 ## 📊 Before & After Comparison
 
 ### **HEALTH DISPLAY**

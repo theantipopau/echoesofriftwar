@@ -217,6 +217,16 @@
           { "id": "relay_station_post", "kind": "beacon", "position": { "x": 1050, "y": 308 } },
           { "id": "victory_banner", "kind": "banner", "position": { "x": 360, "y": 260 } }
         ]
+      },
+      {
+        "id": "outer_roads_ritual_aftermath",
+        "requiredWorldStateTags": ["rift_ritual_sealed"],
+        "additionalNpcIds": ["chronicler_nara", "signalmaster_oren"],
+        "additionalProps": [
+          { "id": "merchant_memorial_beacon", "kind": "beacon", "position": { "x": 404, "y": 286 } },
+          { "id": "relay_restock_supplies", "kind": "supplies", "position": { "x": 1018, "y": 292 } },
+          { "id": "eastern_oath_banner", "kind": "banner", "position": { "x": 1038, "y": 300 } }
+        ]
       }
     ],
     "unlockRequirements": {

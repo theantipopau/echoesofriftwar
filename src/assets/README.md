@@ -10,8 +10,8 @@ Suggested structure:
 - `/assets/ui` — UI elements (icons, frames, buttons)
 - `/assets/tilesets` — map tilesets
 
-Currently, the project uses procedurally generated placeholder textures in `src/scenes/PreloadScene.ts`.
+Current asset loading is handled by the Babylon.js runtime and helpers under `src/utils/assetPaths.ts` plus the world/environment builders.
 
 Future plan:
-- Replace procedural placeholders with real sprites.
+- Replace placeholder geometry and lightweight texture use with more authored environment/model coverage.
 - Maintain consistent naming conventions so data files can refer to them by key.

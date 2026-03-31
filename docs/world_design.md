@@ -1,5 +1,10 @@
 # World Map Design — Midkemia (Game Interpretation)
 
+> Historical world-planning document from the Phaser scene-based build.
+>
+> The current implementation is Babylon.js with data-driven regions managed by `GameManager`, `WorldManager`, and JSON content under `src/data/content/`.
+> Treat the architecture sections below as archival ideation rather than current engineering guidance.
+
 ## Design Goals
 
 - **Modular & Expandable**: Each region is a self-contained Phaser scene with its own assets, NPCs, and events, allowing on-demand loading and future expansion.

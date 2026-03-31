@@ -34,6 +34,8 @@ export const NPC_MODEL_BY_ID: Record<string, CharacterModelSpec> = {
   dispatcher_galt: MALE_PEASANT,
   merchant_aldric: MALE_PEASANT,
   warden_thorne: MALE_RANGER,
+  chronicler_nara: FEMALE_PEASANT,
+  signalmaster_oren: MALE_RANGER,
 }
 
 export const ENEMY_MODEL_BY_ID: Record<string, CharacterModelSpec> = {

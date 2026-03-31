@@ -1,5 +1,12 @@
 # Echoes of the Riftwar — Comprehensive Codebase Analysis
 
+> Historical document from the Phaser-era prototype. It is no longer an accurate description of the current Babylon.js codebase.
+>
+> Current source-of-truth docs:
+> - `README.md` for live project status and systems overview
+> - `ROADMAP.md` for current priorities and expansion targets
+> - `MIGRATION_COMPLETE.md` for the completed engine transition summary
+
 **Status**: Phase 1 Prototype | **Engine**: Phaser 3.60.0 | **Language**: TypeScript | **Build**: Vite
 
 ---

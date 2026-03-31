@@ -1,5 +1,9 @@
 # Babylon.js Migration Guide - Phase 1
 
+> Historical migration log. The migration itself is complete, and several items listed below as pending were finished afterward.
+>
+> Use `README.md` and `ROADMAP.md` for current implementation status.
+
 ## Overview
 The Echoes of the Riftwar RPG has been **successfully migrated from Phaser 3 to Babylon.js** as of March 19, 2026. This document explains the changes, what's been completed, and what remains.
 
