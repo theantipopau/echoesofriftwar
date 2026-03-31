@@ -59,6 +59,18 @@ const PROP_MODEL_SCALE: Partial<Record<EnvironmentPropSpec['type'], number>> = {
   fallen_log: 1.6,
 }
 
+const MERCHANT_STOCK_BY_NPC_ID: Record<string, string[]> = {
+  larat_merchant: ['traveler_rations', 'healing_potion'],
+  torvin_hale: ['iron_dagger', 'sturdy_shield'],
+  mara_kethryn: ['tattered_cloak', 'ritual_dust'],
+  quartermaster_sella: ['trench_knife', 'traveler_rations'],
+  merchant_aldric: ['wardens_seal', 'pack_mule'],
+}
+
+const TRAINING_XP_BY_NPC_ID: Record<string, number> = {
+  apprentice_mage: 40,
+}
+
 interface WorldDependencies {
   enemyManager: EnemyManager
   itemManager: ItemManager
@@ -644,12 +656,12 @@ export default class WorldManager {
 
     actions.forEach((action) => {
       if (action === 'open_shop') {
-        this.dependencies.uiManager.showNotification('Trading UI is not in yet, but the merchant takes note.', 'info')
+        this.openMerchantShop(npc)
         return
       }
 
       if (action === 'open_training') {
-        this.dependencies.uiManager.showNotification('Training will arrive with the next combat pass.', 'info')
+        this.runTrainingSession(npc)
         return
       }
 
@@ -689,6 +701,61 @@ export default class WorldManager {
 
       this.applyQuestResult(this.dependencies.questJournal.onTalk(npc.getData().id, this.player!))
     })
+  }
+
+  private openMerchantShop(npc: NPC3D): void {
+    if (!this.player) {
+      return
+    }
+
+    const npcId = npc.getData().id
+    const stock = MERCHANT_STOCK_BY_NPC_ID[npcId] ?? ['healing_potion', 'traveler_rations']
+
+    let addedCount = 0
+    stock.forEach((itemId) => {
+      const item = this.dependencies.itemManager.getItem(itemId)
+      if (!item || this.playerOwnsItem(item.id)) {
+        return
+      }
+      this.player!.addToInventory(item)
+      addedCount += 1
+    })
+
+    if (addedCount > 0) {
+      this.dependencies.uiManager.showNotification(`${npc.getData().name} stocked ${addedCount} new item${addedCount > 1 ? 's' : ''} in your inventory.`, 'success')
+      return
+    }
+
+    this.dependencies.uiManager.showNotification(`${npc.getData().name} has nothing new right now.`, 'info')
+  }
+
+  private runTrainingSession(npc: NPC3D): void {
+    if (!this.player) {
+      return
+    }
+
+    const trainingTag = `training_completed:${npc.getData().id}`
+    if (this.dependencies.regionProgression.hasWorldStateTag(trainingTag)) {
+      this.dependencies.uiManager.showNotification(`${npc.getData().name} says to put this lesson to use first.`, 'info')
+      return
+    }
+
+    const xpGain = TRAINING_XP_BY_NPC_ID[npc.getData().id] ?? 30
+    this.player.addExperience(xpGain)
+    this.dependencies.regionProgression.setWorldStateTag(trainingTag)
+    this.dependencies.uiManager.showNotification(`${npc.getData().name} drills you through field exercises (+${xpGain} XP).`, 'success')
+  }
+
+  private playerOwnsItem(itemId: string): boolean {
+    if (!this.player) {
+      return false
+    }
+
+    if (this.player.hasItem(itemId)) {
+      return true
+    }
+
+    return Object.values(this.player.getEquipment()).some((item) => item?.id === itemId)
   }
 
   private applyQuestResult(result: QuestEventResult): void {
@@ -2172,10 +2239,10 @@ export default class WorldManager {
           model: building.model,
           position: new Vector3(
             building.x,
-            this.sampleTerrainHeight(building.x, building.z, region.biome, region.id),
+              this.sampleTerrainHeight(building.x, building.z, region.biome, region.id) + (building.y ?? 0),
             building.z,
           ),
-          rotation: building.rotation ? new Vector3(0, building.rotation, 0) : undefined,
+            rotation: building.rotation !== undefined ? new Vector3(0, building.rotation, 0) : undefined,
           scale: building.scale,
         },
         building.id,
