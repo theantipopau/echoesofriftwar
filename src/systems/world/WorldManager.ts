@@ -30,6 +30,13 @@ import ItemManager from '../content/ItemManager'
 import NPCManager from '../content/NPCManager'
 import { UIManager } from '../ui/UIManager'
 import { ENEMY_SETTINGS, WORLD_SETTINGS } from '../../config/gameBalance'
+import {
+  MERCHANT_BALANCE_BY_NPC_ID,
+  TRAINER_BALANCE_BY_NPC_ID,
+  calculateTrainingXp,
+  getMerchantTierLabel,
+  resolveMerchantStock,
+} from '../../config/progressionBalance'
 import { QuestEventResult, QuestJournal } from '../game/QuestJournal'
 import { RegionProgression } from '../game/RegionProgression'
 import DungeonManager from './DungeonManager'
@@ -57,18 +64,6 @@ const PROP_MODEL_SCALE: Partial<Record<EnvironmentPropSpec['type'], number>> = {
   wagon: 1.1,
   fence: 1.25,
   fallen_log: 1.6,
-}
-
-const MERCHANT_STOCK_BY_NPC_ID: Record<string, string[]> = {
-  larat_merchant: ['traveler_rations', 'healing_potion'],
-  torvin_hale: ['iron_dagger', 'sturdy_shield'],
-  mara_kethryn: ['tattered_cloak', 'ritual_dust'],
-  quartermaster_sella: ['trench_knife', 'traveler_rations'],
-  merchant_aldric: ['wardens_seal', 'pack_mule'],
-}
-
-const TRAINING_XP_BY_NPC_ID: Record<string, number> = {
-  apprentice_mage: 40,
 }
 
 interface WorldDependencies {
@@ -709,24 +704,59 @@ export default class WorldManager {
     }
 
     const npcId = npc.getData().id
-    const stock = MERCHANT_STOCK_BY_NPC_ID[npcId] ?? ['healing_potion', 'traveler_rations']
-
-    let addedCount = 0
-    stock.forEach((itemId) => {
-      const item = this.dependencies.itemManager.getItem(itemId)
-      if (!item || this.playerOwnsItem(item.id)) {
-        return
-      }
-      this.player!.addToInventory(item)
-      addedCount += 1
-    })
-
-    if (addedCount > 0) {
-      this.dependencies.uiManager.showNotification(`${npc.getData().name} stocked ${addedCount} new item${addedCount > 1 ? 's' : ''} in your inventory.`, 'success')
+    const profile = MERCHANT_BALANCE_BY_NPC_ID[npcId]
+    if (!profile) {
+      this.dependencies.uiManager.showNotification(`${npc.getData().name} has no prepared stock yet.`, 'info')
       return
     }
 
-    this.dependencies.uiManager.showNotification(`${npc.getData().name} has nothing new right now.`, 'info')
+    const resolvedStock = resolveMerchantStock(
+      profile,
+      (tag) => this.dependencies.regionProgression.hasWorldStateTag(tag),
+    )
+
+    if (resolvedStock.available.length === 0) {
+      this.dependencies.uiManager.showNotification(
+        `${npc.getData().name} is holding back better ${profile.specialty} until the road opens further.`,
+        'info',
+      )
+      return
+    }
+
+    const grantedItems = resolvedStock.available.flatMap((entry) => {
+      const item = this.dependencies.itemManager.getItem(entry.itemId)
+      if (!item || this.playerOwnsItem(item.id)) {
+        return
+      }
+
+      this.player!.addToInventory(item)
+      return [{ item, tier: entry.tier }]
+    })
+
+    if (grantedItems.length > 0) {
+      const names = grantedItems.map(({ item }) => item.name).join(', ')
+      const highestGrantedTier = grantedItems.reduce<'common' | 'uncommon' | 'rare'>((highest, current) => {
+        if (highest === 'rare' || current.tier === highest) {
+          return highest
+        }
+        if (current.tier === 'rare' || highest === 'common') {
+          return current.tier
+        }
+        return highest
+      }, 'common')
+
+      this.dependencies.uiManager.showNotification(
+        `${npc.getData().name} opens ${profile.specialty} (${getMerchantTierLabel(highestGrantedTier)}): ${names}.`,
+        'success',
+      )
+      return
+    }
+
+    const lockedTier = getMerchantTierLabel(resolvedStock.highestAvailableTier)
+    this.dependencies.uiManager.showNotification(
+      `${npc.getData().name}'s ${lockedTier} is already exhausted for your current standing.`,
+      'info',
+    )
   }
 
   private runTrainingSession(npc: NPC3D): void {
@@ -740,10 +770,23 @@ export default class WorldManager {
       return
     }
 
-    const xpGain = TRAINING_XP_BY_NPC_ID[npc.getData().id] ?? 30
+    const profile = TRAINER_BALANCE_BY_NPC_ID[npc.getData().id] ?? {
+      focus: 'field discipline',
+      tier: 1,
+      recommendedLevel: 1,
+      baseXp: 36,
+      minXp: 18,
+      maxXp: 48,
+      aboveLevelPenalty: 0.14,
+      belowLevelBonus: 0.05,
+    }
+    const xpGain = calculateTrainingXp(profile, this.player.getLevel())
     this.player.addExperience(xpGain)
     this.dependencies.regionProgression.setWorldStateTag(trainingTag)
-    this.dependencies.uiManager.showNotification(`${npc.getData().name} drills you through field exercises (+${xpGain} XP).`, 'success')
+    this.dependencies.uiManager.showNotification(
+      `${npc.getData().name} drills your ${profile.focus} (+${xpGain} XP, tier ${profile.tier} lesson).`,
+      'success',
+    )
   }
 
   private playerOwnsItem(itemId: string): boolean {

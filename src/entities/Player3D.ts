@@ -257,15 +257,14 @@ export class Player3D extends Entity3D {
 
   public addExperience(amount: number): void {
     this.experience += amount
-    const expPerLevel = PLAYER_SETTINGS.baseExperiencePerLevel * this.level
-    if (this.experience >= expPerLevel) {
+    while (this.experience >= PLAYER_SETTINGS.baseExperiencePerLevel * this.level) {
+      this.experience -= PLAYER_SETTINGS.baseExperiencePerLevel * this.level
       this.levelUp()
     }
   }
 
   private levelUp(): void {
     this.level++
-    this.experience = 0
     this.recalculateStats()
     this.health = this.maxHealth
     this.mana = this.maxMana
