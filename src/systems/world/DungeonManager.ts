@@ -18,6 +18,12 @@ export type DungeonInteractableRuntime = {
   resolved: boolean
 }
 
+export interface DungeonRuntimeSnapshot {
+  dungeonId: string
+  clearedEncounterIds: string[]
+  resolvedInteractableIds: string[]
+}
+
 export default class DungeonManager {
   private activeDungeon: DungeonData | null = null
   private roots: Node[] = []
@@ -116,6 +122,37 @@ export default class DungeonManager {
 
   public isEncounterCleared(encounterId: string): boolean {
     return this.clearedEncounterIds.has(encounterId)
+  }
+
+  public getSnapshot(): DungeonRuntimeSnapshot | null {
+    if (!this.activeDungeon) {
+      return null
+    }
+
+    return {
+      dungeonId: this.activeDungeon.id,
+      clearedEncounterIds: Array.from(this.clearedEncounterIds),
+      resolvedInteractableIds: Array.from(this.interactables.values())
+        .filter((runtime) => runtime.resolved)
+        .map((runtime) => runtime.data.id),
+    }
+  }
+
+  public restoreFromSnapshot(snapshot: DungeonRuntimeSnapshot): void {
+    if (!this.activeDungeon || snapshot.dungeonId !== this.activeDungeon.id) {
+      return
+    }
+
+    this.clearedEncounterIds = new Set(snapshot.clearedEncounterIds ?? [])
+    const resolvedInteractableIds = new Set(snapshot.resolvedInteractableIds ?? [])
+    this.interactables.forEach((runtime, interactableId) => {
+      if (!resolvedInteractableIds.has(interactableId)) {
+        return
+      }
+
+      runtime.resolved = true
+      runtime.root.setEnabled(false)
+    })
   }
 
   public getNearestInteractable(position: Vector3, range: number, activation: DungeonInteractableData['activation']): DungeonInteractableRuntime | null {

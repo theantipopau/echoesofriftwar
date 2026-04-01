@@ -156,55 +156,63 @@
   {
     "id": "outer_roads_to_krondor",
     "name": "Outer Roads to Krondor",
-    "description": "The inland war road beyond the mileway, now secured by dispatch recovery and relay infrastructure. Echoes of war linger across the broken merchant road and crumbling outpost camps.",
+    "description": "A guarded inland corridor of wayposts, caravan yards, and relay towers that leads toward Krondor. The road is cleaner than the warfront behind it, but every checkpoint feels braced for trouble.",
     "biome": "wilderness",
     "dangerLevel": 4,
     "recommendedLevel": 4,
     "playable": true,
-    "enemyPool": ["war_wretch", "siege_hound", "ashbound_deserter", "rift_sapper"],
-    "npcPool": ["veteran_kess", "merchant_aldric"],
+    "enemyPool": ["road_reaver", "ashbound_deserter", "siege_hound", "relay_saboteur"],
+    "npcPool": ["roadwarden_serik", "caravan_handler_lysa", "relay_scout_miren", "veteran_kess", "merchant_aldric"],
     "connectedRegionIds": ["warfront_approach"],
     "pointsOfInterest": [
-      { "id": "krondor_merchants", "name": "Krondor Merchant Post", "type": "town", "position": { "x": 320, "y": 280 } },
-      { "id": "broken_caravan", "name": "Caravan Wreckage", "type": "camp", "position": { "x": 680, "y": 360 } },
-      { "id": "inner_rift_shard", "name": "Inner Rift Nexus", "type": "rift", "position": { "x": 900, "y": 180 } },
-      { "id": "eastern_passage", "name": "Eastern Passage", "type": "road", "position": { "x": 1080, "y": 300 } }
+      { "id": "roadwarden_gate", "name": "Roadwarden Gate", "type": "fort", "position": { "x": 260, "y": 292 } },
+      { "id": "caravan_staging", "name": "Caravan Staging Yard", "type": "camp", "position": { "x": 520, "y": 316 } },
+      { "id": "north_relay_station", "name": "North Relay Station", "type": "dungeon", "position": { "x": 780, "y": 248 } },
+      { "id": "broken_tollhouse", "name": "Broken Tollhouse", "type": "camp", "position": { "x": 904, "y": 356 } },
+      { "id": "sealed_nexus", "name": "Sealed Nexus", "type": "rift", "position": { "x": 940, "y": 214 } },
+      { "id": "eastern_passage", "name": "Eastern Passage", "type": "road", "position": { "x": 1080, "y": 292 } }
     ],
     "fastTravelNodes": [
-      { "id": "krondor_merchants", "name": "Merchant Post", "position": { "x": 320, "y": 280 } }
+      { "id": "roadwarden_gate", "name": "Roadwarden Gate", "position": { "x": 260, "y": 292 } },
+      { "id": "caravan_staging", "name": "Caravan Staging Yard", "position": { "x": 520, "y": 316 } }
     ],
     "transitionPoints": [
       {
-        "poiId": "krondor_merchants",
+        "poiId": "roadwarden_gate",
         "toRegionId": "warfront_approach",
-        "label": "Back to Warfront",
-        "description": "The merchant post path winds back to the Warfront Approach."
+        "label": "Back to the War Road",
+        "description": "The roadwardens keep the western checkpoint open to the stabilized warfront behind you."
       }
     ],
     "specialEncounters": [
       {
         "id": "encounter_rift_ritual",
-        "poiId": "inner_rift_shard",
+        "poiId": "sealed_nexus",
         "enemyId": "rift_harbinger",
-        "title": "Rift Ritual",
-        "description": "A corrupted figure channels Rift energy at the heart of the regional nexus."
+        "title": "Sealed Nexus",
+        "description": "Beyond the relay line, a quiet pocket of Rift pressure gathers around a sealed road nexus near the eastern passage."
       }
     ],
     "spawnPoints": [
       {
-        "id": "merchant_post_guards",
-        "position": { "x": 340, "y": 200 },
-        "enemyIds": ["siege_hound", "ashbound_deserter"]
+        "id": "west_patrol_break",
+        "position": { "x": 348, "y": 290 },
+        "enemyIds": ["road_reaver", "road_reaver"]
       },
       {
-        "id": "caravan_scavengers",
-        "position": { "x": 620, "y": 340 },
-        "enemyIds": ["war_wretch", "war_wretch"]
+        "id": "staging_flank",
+        "position": { "x": 612, "y": 330 },
+        "enemyIds": ["ashbound_deserter", "siege_hound"]
       },
       {
-        "id": "rift_corrupted",
-        "position": { "x": 840, "y": 150 },
-        "enemyIds": ["rift_sapper", "siege_hound"]
+        "id": "relay_slope",
+        "position": { "x": 760, "y": 230 },
+        "enemyIds": ["road_reaver", "relay_saboteur"]
+      },
+      {
+        "id": "tollhouse_raiders",
+        "position": { "x": 900, "y": 352 },
+        "enemyIds": ["road_reaver", "ashbound_deserter"]
       }
     ],
     "stateVariants": [
@@ -213,9 +221,9 @@
         "requiredWorldStateTags": ["outer_roads_secured"],
         "additionalNpcIds": ["dispatcher_galt", "warden_thorne"],
         "additionalProps": [
-          { "id": "dispatch_headquarters", "kind": "crate", "position": { "x": 320, "y": 264 } },
-          { "id": "relay_station_post", "kind": "beacon", "position": { "x": 1050, "y": 308 } },
-          { "id": "victory_banner", "kind": "banner", "position": { "x": 360, "y": 260 } }
+          { "id": "dispatch_headquarters", "kind": "crate", "position": { "x": 806, "y": 250 } },
+          { "id": "relay_station_post", "kind": "beacon", "position": { "x": 796, "y": 240 } },
+          { "id": "victory_banner", "kind": "banner", "position": { "x": 286, "y": 286 } }
         ]
       },
       {
@@ -223,9 +231,9 @@
         "requiredWorldStateTags": ["rift_ritual_sealed"],
         "additionalNpcIds": ["chronicler_nara", "signalmaster_oren"],
         "additionalProps": [
-          { "id": "merchant_memorial_beacon", "kind": "beacon", "position": { "x": 404, "y": 286 } },
-          { "id": "relay_restock_supplies", "kind": "supplies", "position": { "x": 1018, "y": 292 } },
-          { "id": "eastern_oath_banner", "kind": "banner", "position": { "x": 1038, "y": 300 } }
+          { "id": "merchant_memorial_beacon", "kind": "beacon", "position": { "x": 560, "y": 320 } },
+          { "id": "relay_restock_supplies", "kind": "supplies", "position": { "x": 820, "y": 256 } },
+          { "id": "eastern_oath_banner", "kind": "banner", "position": { "x": 1044, "y": 292 } }
         ]
       }
     ],
@@ -233,6 +241,6 @@
       "requiredQuestIds": ["quest_culvert_breach"],
       "requiredWorldStateTags": ["route_krondor_secured"]
     },
-    "startPosition": { "x": 100, "y": 280 }
+    "startPosition": { "x": 170, "y": 292 }
   }
 ]

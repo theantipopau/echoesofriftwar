@@ -106,29 +106,60 @@
   },
   {
     "id": "quest_outer_roads_patrol",
-    "title": "The Outer Road Opens",
-    "description": "Veteran Kess and the merchant outpost need the Outer Roads secured. Clear the corrupted creatures and ensure the eastern passage is passable.",
+    "title": "Secure the Mileway",
+    "description": "Roadwarden Serik needs the western checkpoint, staging yard, and eastern gate held long enough for regular Krondor traffic to begin moving again. The inland city has been starved of western support long enough.",
     "objectives": [
-      { "id": "visit_merchant_post", "description": "Reach the Krondor Merchant Post.", "type": "visit", "targetId": "krondor_merchants" },
-      { "id": "clear_post_guards", "description": "Defeat 2 creatures near the merchant post.", "type": "kill", "targetId": "siege_hound", "count": 2 },
-      { "id": "check_caravan", "description": "Investigate the broken caravan.", "type": "visit", "targetId": "broken_caravan" },
-      { "id": "clear_scavengers", "description": "Defeat 2 creatures scavenging the caravan.", "type": "kill", "targetId": "war_wretch", "count": 2 },
+      { "id": "reach_gate", "description": "Reach Roadwarden Gate.", "type": "visit", "targetId": "roadwarden_gate" },
+      { "id": "survey_staging", "description": "Inspect the Caravan Staging Yard.", "type": "visit", "targetId": "caravan_staging" },
+      { "id": "break_raider_screen", "description": "Defeat 2 Road Reavers along the main road.", "type": "kill", "targetId": "road_reaver", "count": 2 },
       { "id": "reach_passage", "description": "Reach the Eastern Passage checkpoint.", "type": "visit", "targetId": "eastern_passage" },
-      { "id": "report_kess", "description": "Report success to Veteran Kess.", "type": "talk", "targetId": "veteran_kess_return", "requiredObjectiveIds": ["reach_passage"] }
+      { "id": "report_serik", "description": "Report back to Roadwarden Serik.", "type": "talk", "targetId": "roadwarden_serik_return", "requiredObjectiveIds": ["reach_passage"] }
     ],
     "rewards": [
-      { "experience": 300 },
-      { "itemId": "roadwarden_relay" }
+      { "experience": 300 }
     ],
-    "linkedNpcs": ["veteran_kess"],
+    "linkedNpcs": ["roadwarden_serik"],
+    "branching": false
+  },
+  {
+    "id": "quest_broken_caravan",
+    "title": "Ledger at the Tollhouse",
+    "description": "A supply convoy destined for Krondor never reached the eastern gate. Find out what happened at the broken tollhouse and bring back word before panic spreads down the supply chain.",
+    "objectives": [
+      { "id": "inspect_tollhouse", "description": "Investigate the Broken Tollhouse.", "type": "visit", "targetId": "broken_tollhouse" },
+      { "id": "clear_reavers", "description": "Defeat 2 raiders around the wreckage.", "type": "kill", "targetId": "road_reaver", "count": 2 },
+      { "id": "report_lysa", "description": "Report the caravan's fate to Caravan Handler Lysa.", "type": "talk", "targetId": "caravan_handler_lysa_return", "requiredObjectiveIds": ["clear_reavers"] }
+    ],
+    "rewards": [
+      { "experience": 260 },
+      { "itemId": "pack_mule" }
+    ],
+    "linkedNpcs": ["caravan_handler_lysa"],
+    "branching": false
+  },
+  {
+    "id": "quest_outer_roads_relay",
+    "title": "Relay Under Stone",
+    "description": "The road can be patrolled without a live relay, but it cannot be trusted. Restore the buried station beneath the North Relay and bring the signal back online—Krondor's garrisons depend on knowing the western corridor still stands.",
+    "objectives": [
+      { "id": "reach_relay", "description": "Reach the North Relay Station.", "type": "visit", "targetId": "north_relay_station" },
+      { "id": "clear_saboteur", "description": "Defeat the Relay Saboteur below the station.", "type": "kill", "targetId": "relay_saboteur", "count": 1 },
+      { "id": "stabilize_core", "description": "Stabilize the buried relay core.", "type": "visit", "targetId": "relay_core_console", "requiredObjectiveIds": ["clear_saboteur"] },
+      { "id": "report_miren", "description": "Report to Scout Miren when the relay is lit.", "type": "talk", "targetId": "relay_scout_miren_return", "requiredObjectiveIds": ["stabilize_core"] }
+    ],
+    "rewards": [
+      { "experience": 360 },
+      { "itemId": "wardens_seal" }
+    ],
+    "linkedNpcs": ["relay_scout_miren"],
     "branching": false
   },
   {
     "id": "quest_rift_ritual",
-    "title": "The Inner Nexus",
-    "description": "A Rift ritual is taking place deeper in the Outer Roads. Stop the Rift channeling before it tears the region open wider.",
+    "title": "The Sealed Nexus",
+    "description": "Even with the road restored, a quiet knot of Rift pressure persists near the eastern passage. Break the ritual forming there before Krondor feels the strain—the city has little strength left to spare for new threats.",
     "objectives": [
-      { "id": "approach_nexus", "description": "Reach the Inner Rift Nexus.", "type": "visit", "targetId": "inner_rift_shard" },
+      { "id": "approach_nexus", "description": "Reach the Sealed Nexus.", "type": "visit", "targetId": "sealed_nexus" },
       { "id": "slay_harbinger", "description": "Defeat the Rift Harbinger.", "type": "kill", "targetId": "rift_harbinger", "count": 1 },
       { "id": "return_alive", "description": "Return to report the ritual's end.", "type": "talk", "targetId": "dispatcher_galt_return", "requiredObjectiveIds": ["slay_harbinger"] }
     ],

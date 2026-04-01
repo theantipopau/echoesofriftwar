@@ -164,6 +164,32 @@
     "spriteKey": "enemy_rift_sapper"
   },
   {
+    "id": "road_reaver",
+    "name": "Road Reaver",
+    "type": "raider",
+    "stats": { "maxHealth": 64, "attack": 10, "speed": 70 },
+    "behavior": "aggro",
+    "lootTable": [
+      { "itemId": "traveler_rations", "chance": 0.22 },
+      { "itemId": "iron_dagger", "chance": 0.14 }
+    ],
+    "spriteKey": "enemy_road_reaver"
+  },
+  {
+    "id": "relay_saboteur",
+    "name": "Relay Saboteur",
+    "type": "raider",
+    "stats": { "maxHealth": 118, "attack": 15, "speed": 64 },
+    "behavior": "aggro",
+    "isElite": true,
+    "modifiers": ["shielded", "explosive"],
+    "lootTable": [
+      { "itemId": "ritual_dust", "chance": 0.28 },
+      { "itemId": "wardens_seal", "chance": 0.12 }
+    ],
+    "spriteKey": "enemy_relay_saboteur"
+  },
+  {
     "id": "culvert_brood",
     "name": "Culvert Brood",
     "type": "wretch",

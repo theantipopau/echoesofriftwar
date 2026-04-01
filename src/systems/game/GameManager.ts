@@ -25,7 +25,7 @@ import DungeonContentManager from '../content/DungeonContentManager'
 import { UIManager } from '../ui/UIManager'
 import { QuestJournal } from './QuestJournal'
 import { RegionProgression } from './RegionProgression'
-import SaveSystem from './SaveSystem'
+import SaveManager from './SaveManager'
 import type { InventoryViewState } from '../ui/uiTypes'
 import type { ItemData, ItemStats } from '../../data/types'
 
@@ -45,7 +45,7 @@ export default class GameManager {
   private uiManager: UIManager
   private questJournal: QuestJournal
   private regionProgression: RegionProgression
-  private saveSystem: SaveSystem
+  private saveManager: SaveManager
   private shadowGenerator: ShadowGenerator | null = null
   private sunLight: DirectionalLight | null = null
   private ambientLight: HemisphericLight | null = null
@@ -55,8 +55,7 @@ export default class GameManager {
   private ambientEffects: RiftParticleHandle[] = []
   private regionalSoundscape: RegionalSoundscape
   private lastShadowCasterRefreshMs = 0
-  private lastAutosaveTimestamp = Date.now()
-  private readonly autosaveIntervalMs = 60000
+  private suppressPersistence = false
 
   // Content managers
   private itemManager: ItemManager
@@ -84,7 +83,7 @@ export default class GameManager {
     this.dungeonContentManager = new DungeonContentManager()
     this.questJournal = new QuestJournal(this.questManager, this.itemManager)
     this.regionProgression = new RegionProgression(this.regionManager)
-    this.saveSystem = new SaveSystem()
+    this.saveManager = new SaveManager()
     this.regionalSoundscape = new RegionalSoundscape()
 
     this.uiManager.setInventoryHandlers({
@@ -121,6 +120,9 @@ export default class GameManager {
       dungeonContentManager: this.dungeonContentManager,
       uiManager: this.uiManager,
       onTravelToRegion: (regionId: string) => this.travelToRegion(regionId),
+      onSaveRequested: (reason, source) => {
+        this.saveGame(reason, source)
+      },
     })
 
     this.setupScene()
@@ -189,7 +191,7 @@ export default class GameManager {
     imgProc.colorCurves = curves
   }
 
-  async start(): Promise<void> {
+  async start(mode: 'continue' | 'new' = 'new'): Promise<void> {
     // Load all content data
     await Promise.all([
       this.itemManager.load(),
@@ -209,8 +211,14 @@ export default class GameManager {
 
     this.regionProgression.initialize('crydee')
 
-    const restored = await this.loadGameFromDisk('startup')
-    if (!restored) {
+    if (mode === 'continue') {
+      const restored = await this.loadGameFromDisk('startup')
+      if (!restored) {
+        this.saveManager.clear()
+        await this.initializeNewGame()
+      }
+    } else {
+      this.saveManager.clear()
       await this.initializeNewGame()
     }
 
@@ -221,11 +229,6 @@ export default class GameManager {
     // Game logic updates
     this.worldManager.update()
     this.refreshShadowCasters()
-
-    if (Date.now() - this.lastAutosaveTimestamp >= this.autosaveIntervalMs) {
-      this.saveGame('auto')
-      this.lastAutosaveTimestamp = Date.now()
-    }
 
     // Update UI with player stats
     const player = this.worldManager.getPlayer()
@@ -328,7 +331,7 @@ export default class GameManager {
     this.uiManager.updateRegionProgress(this.regionProgression.getViewState())
     this.applyRegionAtmosphereEffects(region.id, region.biome)
     this.regionalSoundscape.applyRegion(region)
-    this.saveGame('checkpoint')
+    this.saveGame('checkpoint', `region-transition:${region.id}`)
     return true
   }
 
@@ -448,61 +451,90 @@ export default class GameManager {
     })
     player.equipFromInventory('bronze_sword')
     player.equipFromInventory('leather_armor')
-    this.saveGame('checkpoint')
+    this.saveGame('checkpoint', 'new-game')
   }
 
-  private saveGame(reason: 'manual' | 'auto' | 'checkpoint'): boolean {
+  private saveGame(reason: 'manual' | 'auto' | 'checkpoint', source: string = 'unspecified'): boolean {
+    if (this.suppressPersistence) {
+      return false
+    }
+
     const player = this.worldManager.getPlayer()
     if (!player) {
       return false
     }
 
-    const saved = this.saveSystem.save({
+    const summary = this.saveManager.save({
       currentRegionId: this.regionProgression.getCurrentRegionId(),
       player: player.getSnapshot(),
       questJournal: this.questJournal.getSnapshot(),
       regionProgression: this.regionProgression.getSnapshot(),
+      world: this.worldManager.getRuntimeSnapshot(),
     })
+    const saved = Boolean(summary)
 
     if (reason === 'manual') {
       this.uiManager.showNotification(saved ? 'Game saved.' : 'Save failed.', saved ? 'success' : 'error')
+    } else if (saved && (reason === 'auto' || reason === 'checkpoint')) {
+      const message = reason === 'checkpoint' ? 'Checkpoint saved.' : 'Game saved.'
+      this.uiManager.showNotification(message, 'success')
+    }
+
+    if (!saved) {
+      console.warn(`Save failed for ${source}`)
     }
 
     return saved
   }
 
   private async loadGameFromDisk(trigger: 'startup' | 'manual'): Promise<boolean> {
-    const snapshot = this.saveSystem.load()
-    if (!snapshot) {
+    const result = this.saveManager.load()
+    if (result.status !== 'ok') {
       if (trigger === 'manual') {
-        this.uiManager.showNotification('No save slot found.', 'warning')
+        const message = result.status === 'missing'
+          ? 'No save slot found.'
+          : result.status === 'version-mismatch'
+            ? 'Save version mismatch. Starting fresh is recommended.'
+            : 'Save data is corrupt.'
+        this.uiManager.showNotification(message, 'warning')
       }
       return false
     }
 
-    this.questJournal.restoreFromSnapshot(snapshot.questJournal)
-    this.regionProgression.restoreFromSnapshot(snapshot.regionProgression)
+    const { snapshot } = result
+    this.suppressPersistence = true
 
-    const fallbackRegionId = this.regionManager.getRegions()[0]?.id ?? 'crydee'
-    const targetRegionId = snapshot.currentRegionId || this.regionProgression.getCurrentRegionId() || fallbackRegionId
+    try {
+      this.questJournal.restoreFromSnapshot(snapshot.questJournal)
+      this.regionProgression.restoreFromSnapshot(snapshot.regionProgression)
 
-    if (!(await this.travelToRegion(targetRegionId))) {
-      if (!(await this.travelToRegion(fallbackRegionId))) {
+      const fallbackRegionId = this.regionManager.getRegions()[0]?.id ?? 'crydee'
+      const targetRegionId = snapshot.currentRegionId || this.regionProgression.getCurrentRegionId() || fallbackRegionId
+
+      if (!(await this.travelToRegion(targetRegionId))) {
+        if (!(await this.travelToRegion(fallbackRegionId))) {
+          return false
+        }
+      }
+
+      const restoredWorld = await this.worldManager.restoreRuntimeSnapshot(snapshot.world)
+      if (!restoredWorld) {
+        this.uiManager.showNotification('Dungeon state could not be restored; returning to the regional checkpoint.', 'warning')
+      }
+
+      const player = this.worldManager.getPlayer()
+      if (!player) {
         return false
       }
-    }
 
-    const player = this.worldManager.getPlayer()
-    if (!player) {
-      return false
+      player.restoreFromSnapshot(snapshot.player, (itemId) => this.itemManager.getItem(itemId))
+      if (trigger === 'manual') {
+        this.uiManager.showNotification('Save loaded.', 'success')
+      }
+      return true
+    } finally {
+      this.suppressPersistence = false
     }
-
-    player.restoreFromSnapshot(snapshot.player, (itemId) => this.itemManager.getItem(itemId))
-    this.lastAutosaveTimestamp = Date.now()
-    if (trigger === 'manual') {
-      this.uiManager.showNotification('Save loaded.', 'success')
-    }
-    return true
   }
 
   private buildInventoryState(player: import('../../entities/Player3D').Player3D): InventoryViewState {

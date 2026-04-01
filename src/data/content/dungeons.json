@@ -111,5 +111,88 @@
         "oneTime": true
       }
     ]
+  },
+  {
+    "id": "north_relay_station",
+    "name": "North Relay Station",
+    "description": "A compact signal chamber buried beneath the roadside relay rise, where old dispatch machinery hums under cracked stone.",
+    "entryRegionId": "outer_roads_to_krondor",
+    "entryPoiId": "north_relay_station",
+    "questId": "quest_outer_roads_relay",
+    "completionEncounterId": "relay_saboteur_core",
+    "returnOffset": { "x": -16, "y": 10 },
+    "startPosition": { "x": 12, "y": 0 },
+    "rooms": [
+      {
+        "id": "relay_entry",
+        "kind": "entrance",
+        "position": { "x": 0, "y": 0 },
+        "size": { "width": 24, "height": 18 },
+        "ceilingHeight": 7
+      },
+      {
+        "id": "signal_gallery",
+        "kind": "passage",
+        "position": { "x": 30, "y": -2 },
+        "size": { "width": 22, "height": 16 },
+        "ceilingHeight": 6
+      },
+      {
+        "id": "core_chamber",
+        "kind": "final",
+        "position": { "x": 62, "y": 0 },
+        "size": { "width": 28, "height": 22 },
+        "ceilingHeight": 8
+      }
+    ],
+    "corridors": [
+      {
+        "id": "entry_gallery",
+        "fromRoomId": "relay_entry",
+        "toRoomId": "signal_gallery",
+        "width": 8
+      },
+      {
+        "id": "gallery_core",
+        "fromRoomId": "signal_gallery",
+        "toRoomId": "core_chamber",
+        "width": 8
+      }
+    ],
+    "encounters": [
+      {
+        "id": "relay_skirmish",
+        "position": { "x": 28, "y": 0 },
+        "enemyIds": ["road_reaver", "ashbound_deserter"],
+        "title": "Relay Skirmish"
+      },
+      {
+        "id": "relay_saboteur_core",
+        "position": { "x": 64, "y": 0 },
+        "enemyIds": ["relay_saboteur"],
+        "title": "The Relay Saboteur"
+      }
+    ],
+    "interactables": [
+      {
+        "id": "relay_ladder",
+        "kind": "exit",
+        "label": "Relay Ladder",
+        "position": { "x": 4, "y": 0 },
+        "activation": "interact",
+        "message": "A maintenance ladder climbs back to the relay rise above."
+      },
+      {
+        "id": "relay_core_console",
+        "kind": "cache",
+        "label": "Relay Core Console",
+        "position": { "x": 72, "y": 0 },
+        "activation": "interact",
+        "questVisitId": "relay_core_console",
+        "message": "The stone-buried console flickers with old signal light, waiting to be stabilized.",
+        "requiresEncounterId": "relay_saboteur_core",
+        "oneTime": true
+      }
+    ]
   }
 ]

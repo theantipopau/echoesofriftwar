@@ -621,62 +621,226 @@
     }
   },
   {
-    "id": "veteran_kess",
-    "name": "Veteran Kess Cormack",
+    "id": "roadwarden_serik",
+    "name": "Roadwarden Serik Vale",
     "role": "story",
-    "faction": "Merchant Company",
+    "faction": "Road Wardens",
     "regionId": "outer_roads_to_krondor",
-    "position": { "x": 380, "y": 240 },
-    "portraitKey": "portraits_generic",
-    "shortBio": "A grizzled veteran-turned-escort for the merchant post, watching the road east with ancient patience.",
+    "position": { "x": 196, "y": 286 },
+    "portraitKey": "portraits_guard",
+    "shortBio": "The officer holding the western gate, measuring every traveler against the stability of the road ahead.",
     "conditionalStartNodes": [
       {
-        "nodeId": "return_success",
-        "activeQuestIds": ["quest_outer_roads_patrol"],
-        "requiredItemIds": ["roadwarden_relay"]
+        "nodeId": "return_patrol",
+        "activeQuestIds": ["quest_outer_roads_patrol"]
       }
     ],
     "dialogueTree": {
       "start": {
         "id": "start",
-        "text": "The dispatches you brought through the culvert changed everything. The road's passable now, and we're running supply caravans again. Not many enemies out here yet, but give it time.",
+        "text": "Captain Rennic's dispatches reached us, so this mileway lives again. Lives fragile, but lives. I need the corridor checked from gate to eastern marker before I start waving caravans deeper inland.",
         "options": [
-          { "id": "ask_road", "text": "How far does the road reach?", "next": "ask_far" },
-          { "id": "ask_merchants", "text": "What brought the merchants east?", "next": "ask_merchants_why" },
-          { "id": "accept_patrol", "text": "I'll clear the road and bring back proof.", "actions": ["startQuest:quest_outer_roads_patrol"], "next": "end" },
-          { "id": "goodbye", "text": "Stay vigilant out there.", "next": "end" }
+          { "id": "accept_patrol", "text": "I'll secure the mileway.", "actions": ["startQuest:quest_outer_roads_patrol"], "next": "brief_patrol" },
+          { "id": "ask_corridor", "text": "What makes this road different from the warfront?", "next": "corridor" },
+          { "id": "leave", "text": "Keep the gate steady.", "next": "end" }
         ]
       },
-      "ask_far": {
-        "id": "ask_far",
-        "text": "Far enough to smell the coastal air if the wind is right. But between here and there? Plenty of ruins and Rift wounds that didn't heal with your dispatch news.",
+      "brief_patrol": {
+        "id": "brief_patrol",
+        "text": "Check the staging yard, push past the relay rise, and make sure the eastern passage still answers to wardens instead of scavengers. If the raiders are bold enough to show themselves, put them down where the caravan crews can see it.",
         "options": [
-          { "id": "ready", "text": "I'm ready for the challenge.", "next": "end" }
+          { "id": "understood", "text": "I'll bring the road back under control.", "next": "end" }
         ]
       },
-      "ask_merchants_why": {
-        "id": "ask_merchants_why",
-        "text": "Profit. The old trade routes are abandoned, and the merchant houses are desperate to find new paths. You opened a door; they're walking through it.",
+      "corridor": {
+        "id": "corridor",
+        "text": "The warfront is chaos. This road is order under strain. Markers, relay posts, toll ruins, supply yards. Everything here was built to feed Krondor once, which means everything here can still matter if we keep it disciplined. The inland city is stretched thin—they need to know the west is reliable again.",
         "options": [
-          { "id": "understood", "text": "Then I understand the stakes.", "next": "end" }
+          { "id": "noted", "text": "Then I'll keep the line clean.", "next": "end" },
+          { "id": "ask_krondor", "text": "What exactly do they need from us?", "next": "krondor_needs" }
         ]
       },
-      "return_success": {
-        "id": "return_success",
-        "text": "You came back and the eastern post is standing. The merchant caravans will move through now, and we'll rebuild the trade roads. You've done more than clear a route—you've given a whole region a reason to breathe again.",
+      "krondor_needs": {
+        "id": "krondor_needs",
+        "text": "Grain, steel, oil, bodies to hold the eastern garrisons. Everything the coast can send. Right now they're running on stores and hope.",
         "options": [
-          { "id": "accept_next", "text": "What comes next for the road?", "next": "next_step" },
-          { "id": "leave", "text": "The road is yours now.", "next": "end" }
+          { "id": "understood", "text": "Then the road is about survival.", "next": "end" }
         ]
       },
-      "next_step": {
-        "id": "next_step",
-        "text": "Healing. Rebuilding. And watching—always watching—to see if the Rift takes back what we just reclaimed.",
+      "return_patrol": {
+        "id": "return_patrol",
+        "text": "You made the passage and came back standing. That's enough for me. The crews will move forward, the wardens will hold the markers, and the road finally looks like a route instead of a rumor.",
         "options": [
-          { "id": "watched", "text": "It won't go unopposed.", "next": "end" }
+          { "id": "report_clear", "text": "The mileway is secure for now.", "actions": ["talk:roadwarden_serik_return"], "next": "next_orders" },
+          { "id": "leave", "text": "Keep the line moving.", "next": "end" }
         ]
       },
-      "end": { "id": "end", "text": "Keep your eyes on the horizon.", "options": [] }
+      "next_orders": {
+        "id": "next_orders",
+        "text": "Good. That gives Lysa room to recover what the raiders left behind, and Miren room to relight the buried relay farther east. This corridor only holds if all three points hold together. Once it does, the caravans start rolling toward Krondor again—and the garrisons inland finally get word that the west remembers them.",
+        "options": [
+          { "id": "continue", "text": "Then I'll see the rest of it done.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "A good road is a promise. A broken one is a warning.", "options": [] }
+    }
+  },
+  {
+    "id": "caravan_handler_lysa",
+    "name": "Caravan Handler Lysa Marr",
+    "role": "story",
+    "faction": "Merchant Company",
+    "regionId": "outer_roads_to_krondor",
+    "position": { "x": 438, "y": 314 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A convoy handler rebuilding shipment ledgers from memory while she waits to learn which wagons survived the tollhouse stretch.",
+    "conditionalStartNodes": [
+      {
+        "nodeId": "return_ledger",
+        "activeQuestIds": ["quest_broken_caravan"]
+      }
+    ],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "I can replace a wheel, a mule, even a guard. What I can't replace is knowing where the tollhouse convoy died. If the raiders took the route ledger, half the caravans behind us will walk blind.",
+        "options": [
+          { "id": "accept_caravan", "text": "I'll check the tollhouse wreck.", "actions": ["startQuest:quest_broken_caravan"], "next": "ledger_brief" },
+          { "id": "ask_losses", "text": "How bad was the hit?", "next": "losses" },
+          { "id": "leave", "text": "Hold the yard together.", "next": "end" }
+        ]
+      },
+      "ledger_brief": {
+        "id": "ledger_brief",
+        "text": "The tollhouse sits off the road where the old tax wall broke. Find what's left, clear any road reavers still nesting in the stone, and tell me whether the manifest survived. Even bad news lets me route around a grave. If we can't get supplies moving to Krondor soon, the merchants will stop trying altogether.",
+        "options": [
+          { "id": "go", "text": "I'll bring back an answer.", "next": "end" }
+        ]
+      },
+      "losses": {
+        "id": "losses",
+        "text": "One wagon burned, one overturned, one missing outright. That's not battlefield ruin. That's a practiced hit on a fixed choke point, which means somebody has started learning this road faster than we have. Krondor won't wait. They'll send more caravans soon, and if the road isn't solid by then, those caravans die.",
+        "options": [
+          { "id": "grim", "text": "Then they won't keep it long.", "next": "end" }
+        ]
+      },
+      "return_ledger": {
+        "id": "return_ledger",
+        "text": "You went to the tollhouse and came back without that look people wear when there's still hope to save. Tell me straight.",
+        "options": [
+          { "id": "report_ledger", "text": "The convoy is lost. I've seen the site myself.", "actions": ["talk:caravan_handler_lysa_return"], "next": "closure" },
+          { "id": "leave", "text": "Keep your crews moving.", "next": "end" }
+        ]
+      },
+      "closure": {
+        "id": "closure",
+        "text": "Straight answers are worth more than kind ones out here. I'll mark the dead wagons off the books, shift the teams west, and send pack animals until the road can carry wheels again.",
+        "options": [
+          { "id": "accept", "text": "At least the line keeps moving.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Caravans survive on numbers, habit, and people who don't panic.", "options": [] }
+    }
+  },
+  {
+    "id": "relay_scout_miren",
+    "name": "Relay Scout Miren Sahl",
+    "role": "story",
+    "faction": "Dispatch Corps",
+    "regionId": "outer_roads_to_krondor",
+    "position": { "x": 666, "y": 232 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A dispatch scout trying to relight the road's buried signal chain before inland garrisons lose contact again.",
+    "conditionalStartNodes": [
+      {
+        "nodeId": "return_relay",
+        "activeQuestIds": ["quest_outer_roads_relay"],
+        "blockedWorldStateTags": ["outer_roads_secured"]
+      }
+    ],
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "The relay station under this rise still has a live core. I know because the saboteur who buried it alive hasn't stopped trying to wake it in the Rift's favor. If we relight it first, the whole corridor starts acting like a real road again.",
+        "options": [
+          { "id": "accept_relay", "text": "I'll clear the station and relight it.", "actions": ["startQuest:quest_outer_roads_relay"], "next": "relay_brief" },
+          { "id": "ask_station", "text": "Why does one relay matter this much?", "next": "station_value" },
+          { "id": "leave", "text": "Show me where the line breaks.", "next": "end" }
+        ]
+      },
+      "relay_brief": {
+        "id": "relay_brief",
+        "text": "The upper post is just the shell. The real mechanism is under stone. Expect a compact chamber, old signal machinery, and one saboteur who knows enough to make a mess of both. Relight the core console and I can sync the rest from here.",
+        "options": [
+          { "id": "understood", "text": "Then I'll bring the core back.", "next": "end" }
+        ]
+      },
+      "station_value": {
+        "id": "station_value",
+        "text": "Because roads are only as useful as the warning they carry. A lit relay means caravans know where raiders hit, wardens know when the passage falls, and Krondor knows the west has not gone dark again. Right now they have no idea if the road holds or if we've all gone silent. This relay is the proof.",
+        "options": [
+          { "id": "agreed", "text": "Then it stays lit.", "next": "end" }
+        ]
+      },
+      "return_relay": {
+        "id": "return_relay",
+        "text": "I saw the signal flare from the stone housing. That means the core answered you, and the corridor answered with it. Say the word and I'll mark this road secured on every dispatch line still functioning inland.",
+        "options": [
+          { "id": "report_relay", "text": "Mark the road secured.", "actions": ["setWorldState:outer_roads_secured", "talk:relay_scout_miren_return"], "next": "secured" },
+          { "id": "leave", "text": "Hold the signal steady.", "next": "end" }
+        ]
+      },
+      "secured": {
+        "id": "secured",
+        "text": "Then it's done. The gate is anchored, the caravans have a yard, the relay speaks cleanly, and the eastern passage can start pretending it's connected to a kingdom again instead of a wound.",
+        "options": [
+          { "id": "forward", "text": "What's waiting farther east?", "next": "krondor_hint" }
+        ]
+      },
+      "krondor_hint": {
+        "id": "krondor_hint",
+        "text": "Krondor, eventually. Before that? Waystations, frightened garrisons, and more places where the Rift tried to learn the shape of civilization by breaking it open. This is only the first inland breath.",
+        "options": [
+          { "id": "ready", "text": "Then I'll keep moving when the road asks it.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Signals matter because someone has to answer them.", "options": [] }
+    }
+  },
+  {
+    "id": "veteran_kess",
+    "name": "Veteran Kess Cormack",
+    "role": "story",
+    "faction": "Merchant Company",
+    "regionId": "outer_roads_to_krondor",
+    "position": { "x": 492, "y": 340 },
+    "portraitKey": "portraits_generic",
+    "shortBio": "A grizzled escort veteran resting at the staging yard, more interested in reading roads than trusting them.",
+    "dialogueTree": {
+      "start": {
+        "id": "start",
+        "text": "You've got wardens at the gate, traders in the yard, and scouts on the relay rise. That's how roads begin again after a war. Quietly, with tired people pretending they expected it.",
+        "options": [
+          { "id": "ask_road", "text": "Do you trust this route yet?", "next": "trust" },
+          { "id": "ask_merchants", "text": "Why push caravans this early?", "next": "merchants" },
+          { "id": "goodbye", "text": "Keep watching the line.", "next": "end" }
+        ]
+      },
+      "trust": {
+        "id": "trust",
+        "text": "Trust isn't the word. I believe in habits. Patrol the markers, bury the dead, move the wagons, light the signals. Do that long enough and even broken country starts acting civilized again. Krondor runs on routine. Show them routine and they'll believe the road again.",
+        "options": [
+          { "id": "noted", "text": "That will have to be enough.", "next": "end" }
+        ]
+      },
+      "merchants": {
+        "id": "merchants",
+        "text": "Because merchants smell openings faster than generals do. Krondor needs grain, iron, oil, and rumors of hope. If this corridor stays open, coin will finish what steel started. And the merchant houses will make sure every caravan that rolls through earns them influence in Krondor's halls.",
+        "options": [
+          { "id": "understood", "text": "Then the caravans matter as much as the wardens.", "next": "end" }
+        ]
+      },
+      "end": { "id": "end", "text": "Roads are rebuilt by people willing to walk them twice.", "options": [] }
     }
   },
   {
@@ -745,21 +909,21 @@
       },
       "ask_inland_reply": {
         "id": "ask_inland_reply",
-        "text": "Commands are consolidating. The inland garrison has new supplies, new ammunition, new hope. They're talking about deeper pushes into Rift-touched territory. Whether that's wisdom or desperation, we'll see.",
+        "text": "Commands are consolidating at Krondor. The inland garrison has new supplies, new ammunition, new hope. Commanders are talking about deeper pushes into Rift-touched territory. Whether that's wisdom or desperation, I can't say. But Krondor is moving again—which means the whole inland war may be shifting.",
         "options": [
           { "id": "grim", "text": "Then the real war is just beginning.", "next": "end" }
         ]
       },
       "rift_warn": {
         "id": "rift_warn",
-        "text": "We have reports of a Rift ritual taking shape at the Inner Nexus, deeper on the road. If that completes, the channeling could tear the relay network apart. Stop it if you can.",
+        "text": "We have reports of a Rift ritual taking shape at the Sealed Nexus beyond the relay road. If that channeling completes, it could tear the corridor's signal chain apart. Stop it if you can.",
         "options": [
           { "id": "go", "text": "I'll find the nexus and end this.", "next": "end" }
         ]
       },
       "ritual_complete": {
         "id": "ritual_complete",
-        "text": "The channels have gone silent. The relay posts reported a cascade of purple light, then darkness. You must have severed the ritual. The road breathes easier now.",
+        "text": "The Sealed Nexus has gone quiet. Relay posts reported a sheet of violet light, then clean darkness. You must have severed the ritual. The road breathes easier now.",
         "options": [
           { "id": "accept_thanks", "text": "The Rift retreated, at least for now.", "actions": ["setWorldState:rift_ritual_sealed", "talk:dispatcher_galt_return"], "next": "new_horizon" },
           { "id": "leave", "text": "The road is yours again.", "next": "end" }
@@ -767,12 +931,12 @@
       },
       "new_horizon": {
         "id": "new_horizon",
-        "text": "Three times the road has been opened wider since you arrived: the culvert sealed, the dispatches recovered, and now the ritual ended. The inland territories are watching. The war is changing.",
+        "text": "Three times the road has been opened wider since you arrived: the culvert sealed, the dispatches recovered, and now the ritual ended. Krondor is watching. They're sending more caravans, stronger patrols, and commanders are already asking about routes deeper inland. The war is changing—and this time, perhaps the west is ready to lead.",
         "options": [
           { "id": "final", "text": "Then let it change.", "next": "end" }
         ]
       },
-      "end": { "id": "end", "text": "The road opens doors. We don't yet know what's waiting on the other side.", "options": [] }
+      "end": { "id": "end", "text": "The road opens doors. Krondor waits on the other side. Whether we're ready for what it asks of us—that's still to be seen.", "options": [] }
     }
   },
   {
@@ -804,7 +968,7 @@
       },
       "ask_east_reply": {
         "id": "ask_east_reply",
-        "text": "The inland territories. Merchant roads that haven't seen caravans in years. Garrison cities that are running on old stores and older hope. If you go further, you'll see a world that's been holding its breath.",
+        "text": "Krondor. The inland territories beyond it. Merchant roads that haven't seen caravans in years. Garrison cities that are running on old stores and older hope. If you go further east, you'll touch a world that's been holding its breath. And once that door opens, everything changes.",
         "options": [
           { "id": "ready", "text": "Then perhaps it's time to exhale.", "next": "end" }
         ]

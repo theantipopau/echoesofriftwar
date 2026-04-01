@@ -41,6 +41,7 @@ import { QuestEventResult, QuestJournal } from '../game/QuestJournal'
 import { RegionProgression } from '../game/RegionProgression'
 import DungeonManager from './DungeonManager'
 import type { DungeonData, DungeonInteractableData } from '../../data/types'
+import type { DungeonRuntimeSnapshot } from './DungeonManager'
 import { assetPath } from '../../utils/assetPaths'
 import { getRegionEnvironment, type EnvironmentPropSpec, type RegionEnvironmentConfig } from './RegionEnvironments'
 import { placeBuilding, preloadBuildingModels, createVegetationMarker } from './EnvironmentBuilder'
@@ -75,6 +76,13 @@ interface WorldDependencies {
   dungeonContentManager: DungeonContentManager
   uiManager: UIManager
   onTravelToRegion: (regionId: string) => Promise<boolean>
+  onSaveRequested: (reason: 'auto' | 'checkpoint', source: string) => void
+}
+
+export interface WorldRuntimeSnapshot {
+  environmentMode: 'region' | 'dungeon'
+  activeDungeon?: DungeonRuntimeSnapshot | null
+  dungeonAutoVisitedIds: string[]
 }
 
 export default class WorldManager {
@@ -677,8 +685,9 @@ export default class WorldManager {
 
       if (action.startsWith('setWorldState:')) {
         const tag = action.split(':')[1]
-        if (tag) {
+        if (tag && !this.dependencies.regionProgression.hasWorldStateTag(tag)) {
           this.dependencies.regionProgression.setWorldStateTag(tag)
+          this.dependencies.onSaveRequested('auto', `world-state:${tag}`)
         }
         return
       }
@@ -749,6 +758,7 @@ export default class WorldManager {
         `${npc.getData().name} opens ${profile.specialty} (${getMerchantTierLabel(highestGrantedTier)}): ${names}.`,
         'success',
       )
+      this.dependencies.onSaveRequested('auto', `merchant-stock:${npc.getData().id}`)
       return
     }
 
@@ -787,6 +797,7 @@ export default class WorldManager {
       `${npc.getData().name} drills your ${profile.focus} (+${xpGain} XP, tier ${profile.tier} lesson).`,
       'success',
     )
+    this.dependencies.onSaveRequested('auto', `training:${npc.getData().id}`)
   }
 
   private playerOwnsItem(itemId: string): boolean {
@@ -816,6 +827,10 @@ export default class WorldManager {
     result.rewards?.forEach((reward) => {
       this.dependencies.uiManager.showNotification(`Reward gained: ${reward}`, 'info')
     })
+
+    if ((result.completedIds?.length ?? 0) > 0) {
+      this.dependencies.onSaveRequested('auto', 'quest-complete')
+    }
   }
 
   private getActiveTransitionPoints(region: RegionData): RegionData['transitionPoints'] {
@@ -994,6 +1009,7 @@ export default class WorldManager {
             this.dependencies.regionProgression.markDungeonCleared(activeDungeon.id)
             this.dependencies.regionProgression.markEncounterResolved('encounter_culvert_breach')
             this.dependencies.uiManager.showNotification('The Rift pressure drops. The sealed cache can now be reached.', 'success')
+            this.dependencies.onSaveRequested('auto', `dungeon-complete:${activeDungeon.id}`)
           }
         }
       }
@@ -1003,6 +1019,7 @@ export default class WorldManager {
     if (specialEncounter && !this.dependencies.regionProgression.isEncounterResolved(specialEncounter.id)) {
       this.dependencies.regionProgression.markEncounterResolved(specialEncounter.id)
       this.dependencies.uiManager.showNotification(`Special encounter cleared: ${specialEncounter.title}`, 'success')
+      this.dependencies.onSaveRequested('auto', `special-encounter:${specialEncounter.id}`)
     }
   }
 
@@ -1028,6 +1045,7 @@ export default class WorldManager {
         const unlockedRegions = this.dependencies.regionProgression.onPoiDiscovered(poi.id)
         this.announceUnlockedRegions(unlockedRegions)
         this.triggerSpecialEncounter(poi.id)
+        this.dependencies.onSaveRequested('auto', `poi-discovery:${poi.id}`)
       }
     })
   }
@@ -2120,12 +2138,20 @@ export default class WorldManager {
     this.dependencies.uiManager.showNotification(`${encounter.title}: ${encounter.description}`, 'warning')
   }
 
-  private async enterDungeon(dungeon: DungeonData): Promise<void> {
+  private async enterDungeon(
+    dungeon: DungeonData,
+    options?: {
+      restoreSnapshot?: DungeonRuntimeSnapshot | null
+      skipQuestStart?: boolean
+      skipNotifications?: boolean
+      skipAutosave?: boolean
+    },
+  ): Promise<void> {
     if (!this.player || this.environmentMode === 'dungeon') {
       return
     }
 
-    if (dungeon.questId) {
+    if (dungeon.questId && !options?.skipQuestStart) {
       this.applyQuestResult(this.dependencies.questJournal.startQuest(dungeon.questId))
     }
 
@@ -2135,9 +2161,13 @@ export default class WorldManager {
     this.dungeonManager.generateDungeon(dungeon)
 
     if (!this.dependencies.regionProgression.isDungeonCleared(dungeon.id)) {
-      this.spawnDungeonEnemies(dungeon)
+      this.spawnDungeonEnemies(dungeon, new Set(options?.restoreSnapshot?.clearedEncounterIds ?? []))
     } else {
       dungeon.encounters.forEach((encounter) => this.dungeonManager.markEncounterCleared(encounter.id))
+    }
+
+    if (options?.restoreSnapshot) {
+      this.dungeonManager.restoreFromSnapshot(options.restoreSnapshot)
     }
 
     if (this.dependencies.regionProgression.hasClaimedDungeonReward(dungeon.id)) {
@@ -2147,7 +2177,12 @@ export default class WorldManager {
     }
 
     this.player.setPosition(this.dungeonManager.getSpawnPosition())
-    this.dependencies.uiManager.showNotification(`Entered ${dungeon.name}`, 'warning')
+    if (!options?.skipNotifications) {
+      this.dependencies.uiManager.showNotification(`Entered ${dungeon.name}`, 'warning')
+    }
+    if (!options?.skipAutosave) {
+      this.dependencies.onSaveRequested('checkpoint', `enter-dungeon:${dungeon.id}`)
+    }
   }
 
   private async exitDungeon(): Promise<void> {
@@ -2166,13 +2201,19 @@ export default class WorldManager {
 
     await this.generateWorld(this.currentRegion, returnPosition)
     this.dependencies.uiManager.showNotification(`Returned to ${this.currentRegion.name}`, 'info')
+    this.dependencies.onSaveRequested('checkpoint', `exit-dungeon:${dungeon.id}`)
   }
 
-  private spawnDungeonEnemies(dungeon: DungeonData): void {
+  private spawnDungeonEnemies(dungeon: DungeonData, clearedEncounterIds: Set<string> = new Set()): void {
     this.dungeonEncounterAssignments.clear()
     this.dungeonEncounterCounts.clear()
 
     this.dungeonManager.getEnemySpawnDefinitions().forEach((spawn) => {
+      if (clearedEncounterIds.has(spawn.encounterId)) {
+        this.dungeonManager.markEncounterCleared(spawn.encounterId)
+        return
+      }
+
       const enemyData = this.dependencies.enemyManager.getEnemy(spawn.enemyId)
       if (!enemyData) {
         return
@@ -2216,6 +2257,7 @@ export default class WorldManager {
     this.dependencies.regionProgression.markDungeonRewardClaimed(dungeon.id)
     this.dungeonManager.markInteractableResolved(interactable.id)
     this.dependencies.uiManager.showNotification('The breach falls silent for the first time in days.', 'success')
+    this.dependencies.onSaveRequested('auto', `dungeon-reward:${dungeon.id}`)
   }
 
   private projectToScreen(position: Vector3): { x: number; y: number } {
@@ -2257,6 +2299,36 @@ export default class WorldManager {
 
   public getCameraController(): CameraController {
     return this.camera
+  }
+
+  public getRuntimeSnapshot(): WorldRuntimeSnapshot {
+    return {
+      environmentMode: this.environmentMode,
+      activeDungeon: this.environmentMode === 'dungeon' ? this.dungeonManager.getSnapshot() : null,
+      dungeonAutoVisitedIds: Array.from(this.dungeonAutoVisitedIds),
+    }
+  }
+
+  public async restoreRuntimeSnapshot(snapshot: WorldRuntimeSnapshot | null | undefined): Promise<boolean> {
+    if (!snapshot || snapshot.environmentMode !== 'dungeon' || !snapshot.activeDungeon || !this.currentRegion) {
+      this.environmentMode = 'region'
+      this.dungeonAutoVisitedIds = new Set(snapshot?.dungeonAutoVisitedIds ?? [])
+      return true
+    }
+
+    const dungeon = this.dependencies.dungeonContentManager.getDungeon(snapshot.activeDungeon.dungeonId)
+    if (!dungeon) {
+      return false
+    }
+
+    this.dungeonAutoVisitedIds = new Set(snapshot.dungeonAutoVisitedIds ?? [])
+    await this.enterDungeon(dungeon, {
+      restoreSnapshot: snapshot.activeDungeon,
+      skipQuestStart: true,
+      skipNotifications: true,
+      skipAutosave: true,
+    })
+    return true
   }
 
   private async loadRegionEnvironment(region: RegionData): Promise<void> {
