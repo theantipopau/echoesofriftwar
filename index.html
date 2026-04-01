@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Echoes of the Riftwar — Prototype</title>
+    <link rel="icon" type="image/png" href="./squarelogo.PNG" />
+    <style>
+      html, body, #app {
+        height: 100%;
+        margin: 0;
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-dac874ed.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/babylon-core-30667edb.js">
+    <link rel="modulepreload" crossorigin href="./assets/ui-panels-3b4215f9.js">
+    <link rel="stylesheet" href="./assets/index-9afd2cc7.css">
+  </head>
+  <body>
+    <div id="app">
+      <div id="loading-screen" class="loading-screen">
+        <div class="loading-card">
+          <img class="loading-badge" src="./squarelogo.PNG" alt="Echoes crest" />
+          <img class="loading-header" src="./headerlogo.PNG" alt="Echoes of the Riftwar" />
+          <p class="loading-copy">Rebuilding the frontier, stabilizing the Rift, and drawing the next road into view.</p>
+          <div class="loading-bar"><div class="loading-bar__fill"></div></div>
+          <div id="loading-status" class="loading-status">Initializing world systems</div>
+        </div>
+      </div>
+      <canvas id="game"></canvas>
+    </div>
+    
+  </body>
+</html>
