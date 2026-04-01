@@ -74,7 +74,9 @@ async function loadTemplate(scene: Scene, spec: CharacterModelSpec): Promise<Tra
 function configureInstanceMeshes(meshes: AbstractMesh[]): void {
   meshes.forEach((mesh) => {
     mesh.isPickable = false
-    mesh.receiveShadows = true
+    if (!('sourceMesh' in mesh) || !(mesh as AbstractMesh & { sourceMesh?: unknown }).sourceMesh) {
+      mesh.receiveShadows = true
+    }
   })
 }
 
@@ -128,7 +130,7 @@ export async function createCharacterModelInstance(
     return null
   }
 
-  const instanceRoot = template.instantiateHierarchy(undefined, { doNotInstantiate: false }) as TransformNode | null
+  const instanceRoot = template.instantiateHierarchy(undefined, { doNotInstantiate: true }) as TransformNode | null
   if (!instanceRoot) {
     return null
   }

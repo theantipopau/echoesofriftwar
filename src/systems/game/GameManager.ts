@@ -28,6 +28,7 @@ import { RegionProgression } from './RegionProgression'
 import SaveManager from './SaveManager'
 import type { InventoryViewState } from '../ui/uiTypes'
 import type { ItemData, ItemStats } from '../../data/types'
+import { assetPath } from '../../utils/assetPaths'
 
 export interface GameConfig {
   engine: Engine

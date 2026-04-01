@@ -1149,16 +1149,22 @@ export default class WorldManager {
     this.propNodes.forEach((node) => this.markNodeAsShadowReceiver(node))
   }
 
+  private isInstancedMeshLike(mesh: Mesh): boolean {
+    return 'sourceMesh' in mesh && Boolean((mesh as Mesh & { sourceMesh?: unknown }).sourceMesh)
+  }
+
   private markNodeAsShadowReceiver(node: Node): void {
     if (node instanceof TransformNode) {
       node.getChildMeshes().forEach((mesh) => {
-        mesh.receiveShadows = true
+        if (!this.isInstancedMeshLike(mesh)) {
+          mesh.receiveShadows = true
+        }
       })
       return
     }
 
     const maybeMesh = node as Mesh
-    if (typeof maybeMesh.receiveShadows === 'boolean') {
+    if (typeof maybeMesh.receiveShadows === 'boolean' && !this.isInstancedMeshLike(maybeMesh)) {
       maybeMesh.receiveShadows = true
     }
   }
